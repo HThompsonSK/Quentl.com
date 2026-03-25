@@ -1,0 +1,249 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Jam Co. Dashboard - Founder OS</title>
+    <link rel="stylesheet" href="global.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="p-10 font-sans min-h-screen">
+    <div class="max-w-6xl mx-auto">
+        
+        <header class="mb-8 border-b border-[var(--border-subtle)] pb-4 flex justify-between items-center">
+            <div>
+                <h1 class="text-3xl font-bold tracking-tight text-[var(--text-primary)]">Marmalade</h1>
+                <p class="text-[var(--text-muted)] text-sm mt-1">Click any month to view details</p>
+            </div>
+            <div class="space-x-2">
+                <a href="pipeline.html" class="btn-primary">Pipeline</a>
+                <a href="analytics.html" class="btn-primary">Analytics</a>
+                <a href="forecast.html" class="btn-primary">Plan Sales</a>
+                <a href="founder.html" class="btn-accent ml-2">Founder Matrix</a>
+                <a href="projects.html" class="btn-accent">Project Builder</a>
+                <a href="settings.html" class="btn-primary">Settings</a>
+            </div>
+        </header>
+
+        <div id="solvency-hero" class="surface-card mb-8 p-12 transition-colors duration-500 flex flex-col items-center justify-center text-center">
+            <h3 class="text-[10px] font-bold uppercase tracking-widest text-[var(--text-muted)] mb-3">Estimated Cash Runway</h3>
+            <div id="runway-text" class="text-6xl font-mono font-black mb-3 text-[var(--text-primary)] tracking-tight">Calculating...</div>
+            <div id="runway-subtext" class="text-xs font-mono text-[var(--text-muted)] opacity-80">Syncing with Solvency Engine</div>
+        </div>
+
+        <div id="summary-cards" class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
+            </div>
+
+        <div class="surface-card overflow-hidden">
+            <table class="w-full text-left border-collapse">
+                <thead>
+                    <tr>
+                        <th>Month</th>
+                        <th class="text-right">Revenue</th>
+                        <th class="text-right">Break-Even</th>
+                        <th class="text-right">Status</th>
+                        <th class="text-center">Action</th>
+                    </tr>
+                </thead>
+                <tbody id="forecast-table-body">
+                    </tbody>
+            </table>
+        </div>
+    </div>
+
+    <div id="detailModal" class="modal-backdrop fixed inset-0 hidden flex items-center justify-center z-50">
+        <div class="modal-surface w-full max-w-lg overflow-hidden">
+            <div class="px-6 py-5 border-b border-[var(--border-subtle)] flex justify-between items-center bg-[#141414]">
+                <h3 class="text-lg font-semibold text-[var(--text-primary)] tracking-tight" id="modalTitle">Month Details</h3>
+                <button onclick="closeModal()" class="text-[var(--text-muted)] hover:text-[var(--death-red)] font-mono text-xl transition">&times;</button>
+            </div>
+            <div class="p-0">
+                <table class="w-full">
+                    <thead>
+                        <tr>
+                            <th class="pl-6">Product</th>
+                            <th class="text-right">Units</th>
+                            <th class="text-right">Revenue</th>
+                            <th class="text-center pr-6">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="modalBody">
+                        </tbody>
+                </table>
+            </div>
+            <div class="bg-[#141414] px-6 py-4 border-t border-[var(--border-subtle)] text-right">
+                <button onclick="closeModal()" class="btn-primary">Close Details</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentData = [];
+
+        async function loadDashboard() {
+            try {
+                const response = await fetch('/api/dashboard/1');
+                currentData = await response.json();
+                renderTable(currentData);
+                renderCards(currentData);
+            } catch (error) { console.error(error); }
+        }
+
+        async function updateSolvencyMetric() {
+            try {
+               const response = await fetch('/api/runway/1');
+               const data = await response.json();
+
+               const hero = document.getElementById('solvency-hero');
+               const text = document.getElementById('runway-text');
+               const subtext = document.getElementById('runway-subtext');
+
+               text.innerText = data.status_message;
+               subtext.innerText = `Based on £${data.starting_cash.toLocaleString()} cash and £${data.burn_rate.toLocaleString()} monthly burn.`;
+
+               // Dark Mode Solvency Styling
+               hero.className = "surface-card mb-8 p-12 transition-colors duration-500 flex flex-col items-center justify-center text-center border-t-4";
+               
+               if (data.status_color === 'Green') {
+                   hero.classList.add("border-t-[var(--runway-green)]");
+                   text.style.color = "var(--runway-green)";
+               } else if (data.status_color === 'Yellow') {
+                   hero.classList.add("border-t-[var(--warning-yellow)]");
+                   text.style.color = "var(--warning-yellow)";
+               } else if (data.status_color === 'Red') {
+                   hero.classList.add("border-t-[var(--death-red)]", "animate-pulse");
+                   text.style.color = "var(--death-red)";
+               }
+            } catch (error) { console.error("Solvency engine failed:", error); }
+        }
+
+        window.onload = () => {
+            loadDashboard();
+            updateSolvencyMetric(); 
+        };
+
+        function renderTable(data) {
+            const tbody = document.getElementById('forecast-table-body');
+            tbody.innerHTML = '';
+            data.forEach(row => {
+                const dateRaw = row.forecast_month; 
+                const dateStr = new Date(dateRaw).toLocaleDateString('en-GB', {month:'short', year:'numeric'});
+                const isSafe = parseFloat(row.revenue) >= parseFloat(row.revenue_needed_to_break_even);
+
+                const tr = document.createElement('tr');
+                tr.className = "hover:bg-[#222] transition cursor-pointer group";
+                tr.onclick = () => openModal(dateRaw, dateStr);
+
+                const statusStyle = isSafe 
+                    ? 'border border-[var(--runway-green)] text-[var(--runway-green)] bg-[#1a2b22]' 
+                    : 'border border-[var(--death-red)] text-[var(--death-red)] bg-[#3a1c1c]';
+
+                tr.innerHTML = `
+                    <td class="font-medium group-hover:text-white transition">${dateStr}</td>
+                    <td class="text-right font-mono text-[var(--text-primary)]">£${parseFloat(row.revenue).toLocaleString(undefined, {minimumFractionDigits: 2})}</td>
+                    <td class="text-right font-mono text-[var(--text-muted)]">£${parseFloat(row.revenue_needed_to_break_even).toLocaleString(undefined, {minimumFractionDigits: 2})}</td>
+                    <td class="text-right">
+                        <span class="px-2 py-1 rounded text-[10px] font-mono uppercase tracking-widest ${statusStyle}">
+                            ${isSafe ? 'Afloat 🚢' : 'Sinking ⚠️'}
+                        </span>
+                    </td>
+                    <td class="text-center">
+                        <span class="text-[var(--text-muted)] group-hover:text-[var(--text-primary)] text-xs font-mono uppercase tracking-widest transition">View</span>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function renderCards(data) {
+            if(data.length === 0) return;
+            
+            const totalShortfall = data.reduce((acc, row) => {
+                const profit = parseFloat(row.net_profit);
+                return profit < 0 ? acc + Math.abs(profit) : acc;
+            }, 0);
+
+            const pipelineWeighted = parseFloat(data[0].weighted_pipeline_value);
+            const coverage = totalShortfall > 0 ? (pipelineWeighted / totalShortfall) * 100 : 100;
+            
+            let healthStatus = "CRITICAL 🚨";
+            let healthColor = "var(--death-red)";
+            if (coverage >= 100) { healthStatus = "HEALTHY ✅"; healthColor = "var(--runway-green)"; }
+            else if (coverage >= 50) { healthStatus = "AT RISK ⚠️"; healthColor = "var(--warning-yellow)"; }
+
+            document.getElementById('summary-cards').innerHTML = `
+                <div class="surface-card p-6 border-l-2 border-l-[var(--border-subtle)]">
+                    <h3 class="text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-widest">Monthly Fixed Costs</h3>
+                    <p class="text-2xl font-mono text-[var(--text-primary)] mt-2">£${parseFloat(data[0].fixed_costs).toLocaleString(undefined, {maximumFractionDigits: 0})}</p>
+                </div>
+
+                <div class="surface-card p-6 border-l-2 border-l-[var(--accent-indigo)]">
+                    <h3 class="text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-widest">YTD Net Profit (Running)</h3>
+                    <p class="text-2xl font-mono text-[var(--accent-indigo)] mt-2">£${parseFloat(data[data.length - 1].ytd_net_profit).toLocaleString()}</p>
+                    <p class="text-[10px] font-mono text-[var(--text-muted)] mt-1">Cumulative by end of forecast</p>
+                </div>
+
+                <div class="surface-card p-6 border-l-2" style="border-left-color: ${healthColor}">
+                    <h3 class="text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-widest">Pipeline Health</h3>
+                    <div class="flex justify-between items-end mt-2">
+                        <div>
+                            <p class="text-2xl font-mono text-[var(--text-primary)]">${coverage.toFixed(0)}% <span class="text-sm">Cover</span></p>
+                            <p class="text-[10px] font-mono font-bold mt-1" style="color: ${healthColor}">${healthStatus}</p>
+                        </div>
+                        <div class="text-right text-[10px] font-mono text-[var(--text-muted)] space-y-1">
+                            <p>Shortfall: £${totalShortfall.toLocaleString()}</p>
+                            <p>Pipeline: £${pipelineWeighted.toLocaleString()}</p>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+
+        // --- MODAL LOGIC ---
+        async function openModal(rawDate, prettyDate) {
+            document.getElementById('modalTitle').innerText = `Sales for ${prettyDate}`;
+            const modal = document.getElementById('detailModal');
+            const tbody = document.getElementById('modalBody');
+            tbody.innerHTML = '<tr><td colspan="4" class="text-center py-8 text-[var(--text-muted)] font-mono text-sm">Loading...</td></tr>';
+            modal.classList.remove('hidden');
+
+            try {
+                const res = await fetch(`/api/dashboard/1/details/${rawDate}`);
+                const items = await res.json();
+                
+                tbody.innerHTML = '';
+                if(items.length === 0) tbody.innerHTML = '<tr><td colspan="4" class="text-center py-8 text-[var(--text-muted)] font-mono text-sm">No sales planned.</td></tr>';
+
+                items.forEach(item => {
+                    const tr = document.createElement('tr');
+                    tr.className = "hover:bg-[#222] transition";
+                    tr.innerHTML = `
+                        <td class="pl-6 py-4 text-sm font-medium text-[var(--text-primary)]">${item.name}</td>
+                        <td class="text-right py-4 font-mono text-sm text-[var(--text-muted)]">${item.units_forecasted}</td>
+                        <td class="text-right py-4 font-mono text-sm text-[var(--text-primary)]">£${parseFloat(item.revenue).toLocaleString(undefined, {minimumFractionDigits: 2})}</td>
+                        <td class="text-center pr-6 py-4">
+                            <button onclick="deleteItem(${item.id}, '${rawDate}', '${prettyDate}', event)" class="btn-primary hover:border-[var(--death-red)] hover:text-[var(--death-red)] text-xs py-1 px-2">
+                                Delete
+                            </button>
+                        </td>
+                    `;
+                    tbody.appendChild(tr);
+                });
+            } catch (err) { console.error(err); }
+        }
+
+        function closeModal() {
+            document.getElementById('detailModal').classList.add('hidden');
+        }
+
+        async function deleteItem(id, rawDate, prettyDate, event) {
+            event.stopPropagation();
+            if(!confirm("Delete this sales forecast?")) return;
+
+            await fetch(`/api/forecast/${id}`, { method: 'DELETE' });
+            openModal(rawDate, prettyDate);
+            loadDashboard(); 
+        }
+    </script>
+</body>
+</html>

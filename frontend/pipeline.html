@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sales Pipeline - Jam Co.</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-50 p-10">
+    <div class="max-w-5xl mx-auto">
+        <nav class="flex justify-between items-center mb-8 border-b pb-4">
+            <h1 class="text-3xl font-bold text-gray-800">🤝 Sales Pipeline</h1>
+            <a href="index.html" class="text-blue-600 hover:text-blue-800 font-medium">← Back to Dashboard</a>
+        </nav>
+
+        <div class="grid grid-cols-1 md:grid-cols-3 gap-8">
+            <div class="bg-white p-6 rounded-lg shadow-lg md:col-span-1 h-fit">
+                <h2 class="text-xl font-bold text-gray-700 mb-4">Add Potential Client</h2>
+                <form id="leadForm" class="space-y-4">
+                    <input type="hidden" name="company_id" value="1">
+                    
+                    <div>
+                        <label class="block text-sm font-bold text-gray-700">Client Name</label>
+                        <input type="text" name="client_name" placeholder="e.g. Whole Foods" class="w-full p-2 border rounded" required>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-bold text-gray-700">Contract Value (£)</label>
+                        <input type="number" name="contract_value" placeholder="10000" class="w-full p-2 border rounded" required>
+                    </div>
+
+                    <div>
+                        <label class="block text-sm font-bold text-gray-700">Probability of Win (%)</label>
+                        <input type="number" name="probability" placeholder="50" min="0" max="100" class="w-full p-2 border rounded" required>
+                        <p class="text-xs text-gray-500 mt-1">Be realistic! (e.g. 50%)</p>
+                    </div>
+
+                    <button type="submit" class="w-full bg-blue-600 text-white py-2 rounded hover:bg-blue-700 font-bold">
+                        + Add to Pipeline
+                    </button>
+                </form>
+            </div>
+
+            <div class="bg-white p-6 rounded-lg shadow-lg md:col-span-2">
+                <h2 class="text-xl font-bold text-gray-700 mb-4">Current Opportunities</h2>
+                <table class="w-full text-left">
+                    <thead class="bg-gray-100 border-b">
+                        <tr>
+                            <th class="p-3">Client</th>
+                            <th class="p-3 text-right">Value</th>
+                            <th class="p-3 text-right">Prob.</th>
+                            <th class="p-3 text-right text-purple-700">Weighted</th>
+                            <th class="p-3 text-center">Action</th>
+                        </tr>
+                    </thead>
+                    <tbody id="leadsTableBody">
+                        </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        async function loadLeads() {
+            const res = await fetch('/api/leads/1');
+            const leads = await res.json();
+            const tbody = document.getElementById('leadsTableBody');
+            tbody.innerHTML = '';
+
+            leads.forEach(lead => {
+                const weighted = lead.contract_value * (lead.probability / 100);
+                const tr = document.createElement('tr');
+                tr.className = "border-b hover:bg-gray-50";
+                tr.innerHTML = `
+                    <td class="p-3 font-medium">${lead.client_name}</td>
+                    <td class="p-3 text-right">£${parseFloat(lead.contract_value).toLocaleString()}</td>
+                    <td class="p-3 text-right text-gray-500">${lead.probability}%</td>
+                    <td class="p-3 text-right font-bold text-purple-700">£${weighted.toLocaleString()}</td>
+                    <td class="p-3 text-center">
+                        <button onclick="deleteLead(${lead.id})" class="text-red-500 hover:text-red-700">🗑️</button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        document.getElementById('leadForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const data = Object.fromEntries(new FormData(e.target));
+            await fetch('/api/leads', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            });
+            e.target.reset();
+            loadLeads();
+        });
+
+        async function deleteLead(id) {
+            if(confirm('Remove this lead?')) {
+                await fetch(`/api/leads/${id}`, { method: 'DELETE' });
+                loadLeads();
+            }
+        }
+
+        loadLeads();
+    </script>
+</body>
+</html>

@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Finances - Solvency Engine</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-gray-50 p-10">
+    <div class="max-w-4xl mx-auto">
+        <nav class="flex justify-between items-center mb-8">
+            <h1 class="text-3xl font-bold text-gray-800">💰 Financial Inputs</h1>
+            <a href="index.html" class="text-blue-600 font-bold hover:underline">← Dashboard</a>
+        </nav>
+
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
+            <div class="bg-white p-6 rounded-xl shadow-md border-t-4 border-green-500">
+                <h2 class="text-xl font-bold mb-4">Update Cash in Bank</h2>
+                <form id="cashForm" class="space-y-4">
+                    <input type="hidden" name="company_id" value="1">
+                    <div>
+                        <label class="block text-sm font-semibold">Date of Snapshot</label>
+                        <input type="date" name="balance_date" class="w-full p-2 border rounded" required>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-semibold">Total Cash (£)</label>
+                        <input type="number" step="0.01" name="total_cash" placeholder="50000" class="w-full p-2 border rounded" required>
+                    </div>
+                    <button type="submit" class="w-full bg-green-600 text-white py-2 rounded font-bold hover:bg-green-700">Update Cash</button>
+                </form>
+            </div>
+
+            <div class="bg-white p-6 rounded-xl shadow-md border-t-4 border-red-500">
+                <h2 class="text-xl font-bold mb-4">Add One-Off Expense (CAPEX)</h2>
+                <form id="capexForm" class="space-y-4">
+                    <input type="hidden" name="company_id" value="1">
+                    <div>
+                        <label class="block text-sm font-semibold">Expense Name</label>
+                        <input type="text" name="name" placeholder="e.g. Legal Fees, Laptops" class="w-full p-2 border rounded" required>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-semibold">Amount (£)</label>
+                        <input type="number" step="0.01" name="amount" placeholder="2500" class="w-full p-2 border rounded" required>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-semibold">Date</label>
+                        <input type="date" name="expense_date" class="w-full p-2 border rounded" required>
+                    </div>
+                    <button type="submit" class="w-full bg-red-600 text-white py-2 rounded font-bold hover:bg-red-700">Add Expense</button>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        const handleForm = async (e, endpoint) => {
+            e.preventDefault();
+            const data = Object.fromEntries(new FormData(e.target));
+            try {
+                const res = await fetch(`/api/${endpoint}`, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+                if (res.ok) { alert('✅ Successfully Updated!'); e.target.reset(); }
+            } catch (err) { alert('❌ Error connecting to server'); }
+        };
+
+        document.getElementById('cashForm').addEventListener('submit', (e) => handleForm(e, 'cash_balances'));
+        document.getElementById('capexForm').addEventListener('submit', (e) => handleForm(e, 'one_off_expenses'));
+    </script>
+</body>
+</html>

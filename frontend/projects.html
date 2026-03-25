@@ -1,0 +1,507 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Project CAPEX - Founder OS</title>
+    <link rel="stylesheet" href="global.css">
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="p-10 font-sans min-h-screen">
+    <div class="max-w-6xl mx-auto">
+        
+        <nav class="flex justify-between items-center mb-8 border-b border-[var(--border-subtle)] pb-4">
+            <h1 class="text-3xl font-bold tracking-tight">🏗️ Project CAPEX</h1>
+            <a href="index.html" class="text-[var(--text-muted)] hover:text-[var(--text-primary)] font-medium transition">← Back to Dashboard</a>
+        </nav>
+
+        <div id="view-list">
+            <div class="surface-card p-6 mb-8 border-t-2 border-t-[var(--accent-orange)]">
+                <h2 class="text-xl font-semibold mb-4 text-[var(--text-primary)]">Create New Project</h2>
+                <form id="createProjectForm" class="flex gap-4 items-end">
+                    <input type="hidden" name="company_id" value="1">
+                    <div class="flex-1">
+                        <label class="block text-xs font-semibold mb-2 text-[var(--text-muted)] uppercase tracking-widest">Project Name</label>
+                        <input type="text" name="project_name" placeholder="e.g. Brixton Sauna Build" class="w-full" required>
+                    </div>
+                    <div>
+                        <label class="block text-xs font-semibold mb-2 text-[var(--text-muted)] uppercase tracking-widest">Status</label>
+                        <select name="status" class="w-full">
+                            <option value="planned">Planned</option>
+                            <option value="active">Active</option>
+                        </select>
+                    </div>
+                    <button type="submit" class="btn-accent">Create Project</button>
+                </form>
+            </div>
+
+            <h2 class="text-xl font-semibold mb-4 text-[var(--text-muted)] uppercase tracking-widest">Active Projects</h2>
+            <div id="projects-container" class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                </div>
+        </div>
+
+        <div id="view-detail" class="hidden">
+            <button onclick="showList()" class="mb-6 text-sm font-medium text-[var(--text-muted)] hover:text-[var(--text-primary)] transition">← Back to Projects</button>
+            
+            <div class="flex justify-between items-center mb-8">
+                <h2 id="detail-title" class="text-3xl font-bold tracking-tight">Project Details</h2>
+                <div class="flex gap-4">
+                    <div>
+                        <label class="block text-[10px] font-semibold text-[var(--text-muted)] uppercase tracking-widest mb-1">Project Start</label>
+                        <input type="date" id="proj-start-date" class="text-sm">
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-semibold text-[var(--text-muted)] uppercase tracking-widest mb-1">Projected End</label>
+                        <input type="date" id="proj-end-date" class="text-sm">
+                    </div>
+                </div>
+            </div>
+
+            <div id="financials-card" class="surface-card p-6 mb-8 transition-colors duration-300">
+                <h3 class="text-xs font-semibold text-[var(--text-muted)] uppercase tracking-widest mb-6 border-b border-[var(--border-subtle)] pb-2">Budget vs. Actuals</h3>
+                <div class="grid grid-cols-3 gap-4 text-center mb-6">
+                    <div>
+                        <div class="text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-widest mb-1">Total Budget</div>
+                        <div id="vis-budget" class="text-2xl font-mono text-[var(--text-primary)]">£0</div>
+                    </div>
+                    <div>
+                        <div class="text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-widest mb-1">Actual Spend</div>
+                        <div id="vis-actuals" class="text-2xl font-mono text-[var(--text-primary)]">£0</div>
+                    </div>
+                    <div>
+                        <div class="text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-widest mb-1">Variance</div>
+                        <div id="vis-variance" class="text-2xl font-mono">£0</div>
+                    </div>
+                </div>
+                
+                <div class="w-full bg-[var(--bg-dark)] rounded-full h-2 mb-2 overflow-hidden border border-[var(--border-subtle)]">
+                    <div id="vis-bar" class="bg-[var(--runway-green)] h-2 rounded-full transition-all duration-1000" style="width: 0%"></div>
+                </div>
+                <div id="vis-status" class="text-xs font-mono text-right text-[var(--text-muted)]">Calculating...</div>
+            </div>
+
+            <div class="flex border-b border-[var(--border-subtle)] mb-6">
+                <button id="tab-btn-maker" onclick="switchTab('maker')" class="px-6 py-3 font-medium text-[var(--text-primary)] border-b-2 border-[var(--accent-indigo)] transition">Cashflow Maker</button>
+                <button id="tab-btn-view" onclick="switchTab('view')" class="px-6 py-3 font-medium text-[var(--text-muted)] hover:text-[var(--text-primary)] transition border-b-2 border-transparent">Cashflow Timeline</button>
+            </div>
+
+            <div id="tab-maker">
+                <div class="surface-card overflow-hidden mb-6">
+                    <table>
+                        <thead>
+                            <tr>
+                                <th>Item</th>
+                                <th>Supplier</th>
+                                <th>Total (£)</th>
+                                <th>Category</th>
+                                <th>Start Date</th>
+                                <th class="text-right">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="maker-tbody">
+                            </tbody>
+                    </table>
+                    
+                    <div class="p-3 border-t border-[var(--border-subtle)] hover:bg-[#222] transition cursor-pointer text-center" onclick="addMakerRow()">
+                        <span class="text-[var(--text-muted)] hover:text-[var(--text-primary)] font-mono text-xs">+ Add Cost</span>
+                    </div>
+                </div>
+                
+                <div class="flex justify-end mt-4">
+                    <button onclick="submitBatchCashflow()" class="btn-accent py-3 px-8 shadow-lg">
+                        Execute Cashflow Update
+                    </button>
+                </div>
+            </div>
+
+            <div id="tab-view" class="hidden">
+                <div class="surface-card p-12 text-center border-dashed border-2 border-[var(--border-subtle)]">
+                    <h3 class="text-lg font-medium text-[var(--text-primary)] mb-2">Timeline View Generator</h3>
+                    <p class="text-[var(--text-muted)] text-sm">Once you execute the cashflow, your interactive matrix will appear here.</p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div id="terms-modal" class="modal-backdrop fixed inset-0 hidden flex items-center justify-center z-50">
+        <div class="modal-surface p-8 w-full max-w-md">
+            <h3 class="text-xl font-bold mb-1 text-[var(--text-primary)]">Payment Terms</h3>
+            <p class="text-xs text-[var(--text-muted)] font-mono mb-6 pb-4 border-b border-[var(--border-subtle)]" id="modal-summary">Configure terms...</p>
+            
+            <div class="grid grid-cols-2 gap-4 mb-6">
+                <div>
+                    <label class="block text-[10px] font-semibold text-[var(--text-muted)] uppercase tracking-widest mb-2">Splits</label>
+                    <input type="number" id="t-splits" value="1" min="1" class="w-full" onchange="generateBatchPreview()">
+                </div>
+                <div>
+                    <label class="block text-[10px] font-semibold text-[var(--text-muted)] uppercase tracking-widest mb-2">Days Between</label>
+                    <input type="number" id="t-days" value="30" min="0" class="w-full" onchange="generateBatchPreview()">
+                </div>
+            </div>
+
+            <div id="preview-box" class="bg-[var(--bg-dark)] border border-[var(--border-subtle)] p-4 rounded-md mb-6 max-h-40 overflow-y-auto text-xs font-mono text-[var(--text-muted)]">
+                </div>
+
+            <div class="flex justify-end gap-3">
+                <button onclick="closeModal()" class="btn-primary">Cancel</button>
+                <button onclick="saveTermsToRow()" class="btn-accent">Save Configuration</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let currentProjectId = null;
+
+        // --- View Management ---
+        async function loadProjects() {
+            try {
+                const res = await fetch('/api/projects/list/1');
+                const data = await res.json();
+                const container = document.getElementById('projects-container');
+                container.innerHTML = '';
+                
+                data.forEach(p => {
+                    container.innerHTML += `
+                        <div onclick="openProject(${p.id}, '${p.project_name}')" class="surface-card p-6 cursor-pointer hover:border-[var(--text-muted)] transition group">
+                            <h3 class="text-lg font-medium text-[var(--text-primary)] group-hover:text-white">${p.project_name}</h3>
+                            <span class="inline-block mt-3 px-2 py-1 bg-[var(--bg-dark)] border border-[var(--border-subtle)] text-[10px] font-mono text-[var(--text-muted)] uppercase rounded">${p.status}</span>
+                        </div>
+                    `;
+                });
+            } catch (err) { console.error(err); }
+        }
+
+        document.getElementById('createProjectForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const data = Object.fromEntries(new FormData(e.target));
+            try {
+                const res = await fetch('/api/projects', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+                if (res.ok) { e.target.reset(); loadProjects(); }
+            } catch (err) { alert('Error creating project'); }
+        });
+
+        async function openProject(id, name) {
+            currentProjectId = id;
+            document.getElementById('detail-title').innerText = name;
+            document.getElementById('view-list').classList.add('hidden');
+            document.getElementById('view-detail').classList.remove('hidden');
+            
+            document.getElementById('maker-tbody').innerHTML = ''; 
+            batchTermsData = {}; 
+            
+            loadFinancials();
+            
+            try {
+                const res = await fetch(`/api/projects/${currentProjectId}/cashflow`);
+                const existingData = await res.json();
+                existingData.forEach(item => renderExistingMakerRow(item));
+            } catch(e) { console.error(e); }
+
+            addMakerRow();
+        }
+
+        function showList() {
+            document.getElementById('view-detail').classList.add('hidden');
+            document.getElementById('view-list').classList.remove('hidden');
+            currentProjectId = null;
+        }
+
+        // --- Scorecard ---
+        async function loadFinancials() {
+            if (!currentProjectId) return;
+            try {
+                const res = await fetch(`/api/projects/${currentProjectId}/financials`);
+                const data = await res.json();
+
+                document.getElementById('vis-budget').innerText = `£${data.total_budget.toLocaleString()}`;
+                document.getElementById('vis-actuals').innerText = `£${data.total_actuals.toLocaleString()}`;
+                
+                const varEl = document.getElementById('vis-variance');
+                const cardEl = document.getElementById('financials-card');
+                const barEl = document.getElementById('vis-bar');
+                const statEl = document.getElementById('vis-status');
+
+                varEl.innerText = `£${Math.abs(data.variance).toLocaleString()}`;
+                statEl.innerText = data.status.toUpperCase();
+
+                let percent = data.total_budget > 0 ? Math.min((data.total_actuals / data.total_budget) * 100, 100) : 0;
+                barEl.style.width = `${percent}%`;
+
+                if (data.variance < 0) {
+                    varEl.style.color = 'var(--death-red)';
+                    cardEl.style.borderColor = 'var(--death-red)';
+                    barEl.style.backgroundColor = 'var(--death-red)';
+                    statEl.style.color = 'var(--death-red)';
+                } else {
+                    varEl.style.color = 'var(--runway-green)';
+                    cardEl.style.borderColor = 'var(--border-subtle)';
+                    barEl.style.backgroundColor = 'var(--runway-green)';
+                    statEl.style.color = 'var(--text-muted)';
+                }
+
+            } catch (err) { console.error(err); }
+        }
+
+        // --- Tabs ---
+        function switchTab(tab) {
+            document.getElementById('tab-maker').classList.toggle('hidden', tab !== 'maker');
+            document.getElementById('tab-view').classList.toggle('hidden', tab !== 'view');
+            
+            const makerBtn = document.getElementById('tab-btn-maker');
+            const viewBtn = document.getElementById('tab-btn-view');
+            
+            if (tab === 'maker') {
+                makerBtn.classList.replace('text-[var(--text-muted)]', 'text-[var(--text-primary)]');
+                makerBtn.classList.replace('border-transparent', 'border-[var(--accent-indigo)]');
+                viewBtn.classList.replace('text-[var(--text-primary)]', 'text-[var(--text-muted)]');
+                viewBtn.classList.replace('border-[var(--accent-indigo)]', 'border-transparent');
+            } else {
+                viewBtn.classList.replace('text-[var(--text-muted)]', 'text-[var(--text-primary)]');
+                viewBtn.classList.replace('border-transparent', 'border-[var(--accent-indigo)]');
+                makerBtn.classList.replace('text-[var(--text-primary)]', 'text-[var(--text-muted)]');
+                makerBtn.classList.replace('border-[var(--accent-indigo)]', 'border-transparent');
+                loadTimelineView();
+            }
+        }
+
+        // --- Maker Engine ---
+        let rowCounter = 0;
+        let batchTermsData = {};
+        let currentRowBeingEdited = null;
+        let currentInstallments = [];
+
+        function renderExistingMakerRow(item) {
+            const tr = document.createElement('tr');
+            tr.className = "bg-[#111] opacity-70";
+            tr.innerHTML = `
+                <td>${item.item_name}</td>
+                <td>${item.supplier || '-'}</td>
+                <td class="font-mono text-[var(--text-primary)]">£${parseFloat(item.total_amount).toLocaleString()}</td>
+                <td>${item.grouping_category || '-'}</td>
+                <td class="font-mono">${item.start_date}</td>
+                <td class="text-right">
+                    <button onclick="deleteBudgetItem(${item.id}, this)" class="btn-primary hover:border-[var(--death-red)] hover:text-[var(--death-red)] text-xs py-1 px-2">Delete</button>
+                </td>
+            `;
+            document.getElementById('maker-tbody').appendChild(tr);
+        }
+
+        async function deleteBudgetItem(id, btnEl) {
+            if(!confirm("Delete this parameter?")) return;
+            btnEl.innerText = "...";
+            try {
+                const res = await fetch(`/api/projects/budget/${id}`, { method: 'DELETE' });
+                if(res.ok) {
+                    btnEl.closest('tr').remove();
+                    loadFinancials();
+                    // Optional: Update timeline view quietly if we are currently on it
+                    if(!document.getElementById('tab-view').classList.contains('hidden')) {
+                        loadTimelineView();
+                    }
+                } else alert("Failed.");
+            } catch(e) { alert("Error."); }
+        }
+
+        function addMakerRow() {
+            rowCounter++;
+            const rowId = `row-${rowCounter}`;
+            batchTermsData[rowId] = [];
+            
+            const tr = document.createElement('tr');
+            tr.id = rowId;
+            
+            const inputStyle = "w-full bg-transparent border-none p-0 text-sm focus:ring-0 focus:outline-none placeholder-[var(--text-muted)]";
+            
+            tr.innerHTML = `
+                <td><input type="text" class="item-name ${inputStyle}" placeholder="Item Name"></td>
+                <td><input type="text" class="supplier ${inputStyle}" placeholder="Supplier"></td>
+                <td><input type="number" class="total-amt ${inputStyle} font-mono" placeholder="0.00"></td>
+                <td><input type="text" class="category ${inputStyle}" placeholder="Category"></td>
+                <td><input type="date" class="start-date ${inputStyle} font-mono"></td>
+                <td class="text-right">
+                    <button id="btn-${rowId}" onclick="openBatchTermsModal('${rowId}')" class="btn-primary text-xs py-1 px-2">Configure</button>
+                </td>
+            `;
+            document.getElementById('maker-tbody').appendChild(tr);
+        }
+
+        // --- Modal ---
+        function openBatchTermsModal(rowId) {
+            currentRowBeingEdited = rowId;
+            const rowEl = document.getElementById(rowId);
+            const item = rowEl.querySelector('.item-name').value;
+            const total = parseFloat(rowEl.querySelector('.total-amt').value);
+            const start = rowEl.querySelector('.start-date').value;
+
+            if(!item || !total || !start) return alert("Fill Item, Total, and Date first.");
+
+            document.getElementById('modal-summary').innerText = `Structuring £${total} for ${item} from ${start}`;
+            document.getElementById('terms-modal').classList.remove('hidden');
+            generateBatchPreview();
+        }
+
+        function closeModal() { document.getElementById('terms-modal').classList.add('hidden'); }
+
+        function generateBatchPreview() {
+            const rowEl = document.getElementById(currentRowBeingEdited);
+            const total = parseFloat(rowEl.querySelector('.total-amt').value);
+            const start = rowEl.querySelector('.start-date').value;
+            const splits = parseInt(document.getElementById('t-splits').value) || 1;
+            const days = parseInt(document.getElementById('t-days').value) || 0;
+
+            currentInstallments = [];
+            let html = '';
+            const amt = (total / splits).toFixed(2);
+            let baseDate = new Date(start);
+
+            for(let i = 0; i < splits; i++) {
+                let d = new Date(baseDate);
+                d.setDate(d.getDate() + (i * days));
+                let fDate = d.toISOString().split('T')[0];
+                currentInstallments.push({ payment_amount: parseFloat(amt), expected_payment_date: fDate });
+                html += `<div class="flex justify-between py-1 border-b border-[var(--border-subtle)] last:border-0"><span>Split ${i+1}</span><span class="text-[var(--text-primary)]">£${amt} on ${fDate}</span></div>`;
+            }
+            document.getElementById('preview-box').innerHTML = html;
+        }
+
+        function saveTermsToRow() {
+            if(!currentRowBeingEdited) return;
+            batchTermsData[currentRowBeingEdited] = currentInstallments;
+            const btn = document.getElementById(`btn-${currentRowBeingEdited}`);
+            btn.innerHTML = "Saved";
+            btn.style.borderColor = "var(--runway-green)";
+            btn.style.color = "var(--runway-green)";
+            closeModal();
+        }
+
+        async function submitBatchCashflow() {
+            if(!currentProjectId) return;
+            // Ignore already saved rows (.bg-[#111]) to prevent duplication!
+            const rows = document.getElementById('maker-tbody').querySelectorAll('tr:not(.bg-\\[\\#111\\])');
+            
+            let successCount = 0;
+            for(let row of rows) {
+                const item = row.querySelector('.item-name')?.value;
+                const total = parseFloat(row.querySelector('.total-amt')?.value);
+                if(!item || isNaN(total)) continue;
+
+                const payload = {
+                    item_name: item, supplier: row.querySelector('.supplier').value,
+                    grouping_category: row.querySelector('.category').value, total_amount: total,
+                    start_date: row.querySelector('.start-date').value, installments: batchTermsData[row.id] || []
+                };
+
+                try {
+                    const res = await fetch(`/api/projects/${currentProjectId}/budget`, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+                    if(res.ok) successCount++;
+                } catch(e) {}
+            }
+            if(successCount > 0) switchTab('view');
+            else switchTab('view'); // Switch over anyway if they just want to see it
+        }
+
+        // --- Timeline Engine ---
+        let cashflowData = [];
+        let timelineMonths = [];
+
+        async function loadTimelineView() {
+            if(!currentProjectId) return;
+            const res = await fetch(`/api/projects/${currentProjectId}/cashflow`);
+            cashflowData = await res.json();
+            generateTimelineMatrix();
+        }
+
+        function generateTimelineMatrix() {
+            if(cashflowData.length === 0) return document.getElementById('tab-view').innerHTML = `<div class="surface-card p-12 text-center text-[var(--text-muted)]">No data found.</div>`;
+            
+            let dates = cashflowData.flatMap(i => i.installments.map(inst => new Date(inst.expected_payment_date)));
+            if(dates.length === 0) return;
+
+            let minDate = new Date(Math.min(...dates)), maxDate = new Date(Math.max(...dates));
+            timelineMonths = [];
+            let curr = new Date(minDate.getFullYear(), minDate.getMonth(), 1);
+            let end = new Date(maxDate.getFullYear(), maxDate.getMonth(), 1);
+            
+            while(curr <= end) {
+                timelineMonths.push(curr.toISOString().slice(0, 7));
+                curr.setMonth(curr.getMonth() + 1);
+            }
+            renderTimelineTable();
+        }
+
+        function renderTimelineTable() {
+            let html = `
+                <div class="flex justify-between items-center mb-4">
+                    <h3 class="text-lg font-medium text-[var(--text-primary)]">Interactive Matrix</h3>
+                    <div class="space-x-2">
+                        <button onclick="addTimelineMonth('left')" class="btn-primary text-xs">← Expand</button>
+                        <button onclick="addTimelineMonth('right')" class="btn-primary text-xs">Expand →</button>
+                    </div>
+                </div>
+                <div class="surface-card overflow-x-auto">
+                    <table class="min-w-max">
+                        <thead>
+                            <tr>
+                                <th class="sticky left-0 bg-[var(--bg-surface)] z-10 shadow-[1px_0_0_0_var(--border-subtle)]">Item</th>
+                                <th>Total</th>`;
+            
+            timelineMonths.forEach(m => {
+                let d = new Date(m + "-01").toLocaleString('default', { month: 'short', year: '2-digit' });
+                html += `<th class="text-center border-l border-[var(--border-subtle)]">${d}</th>`;
+            });
+
+            html += `</tr></thead><tbody>`;
+
+            cashflowData.forEach(item => {
+                html += `<tr>
+                    <td class="sticky left-0 bg-[var(--bg-surface)] z-10 font-medium shadow-[1px_0_0_0_var(--border-subtle)]">${item.item_name}</td>
+                    <td class="font-mono text-[var(--text-primary)]">£${parseFloat(item.total_amount).toLocaleString()}</td>`;
+
+                let sums = {};
+                item.installments.forEach(inst => sums[inst.expected_payment_date.slice(0, 7)] = (sums[inst.expected_payment_date.slice(0, 7)] || 0) + parseFloat(inst.payment_amount));
+
+                timelineMonths.forEach(m => {
+                    let isFilled = sums[m] > 0;
+                    let amt = isFilled ? `£${sums[m].toLocaleString()}` : '-';
+                    let styling = isFilled ? 'bg-[#1a2b22] text-[var(--runway-green)] cursor-grab hover:bg-[#20362b]' : 'text-[var(--text-muted)] hover:bg-[#222]';
+                    
+                    html += `<td class="text-center border-l border-[var(--border-subtle)] font-mono text-xs transition ${styling}"
+                        draggable="${isFilled}" ondragstart="drag(event, ${item.id}, '${m}')" ondrop="drop(event, ${item.id}, '${m}')" ondragover="allowDrop(event)" ondragleave="dragLeave(event)">${amt}</td>`;
+                });
+                html += `</tr>`;
+            });
+            html += `</tbody></table></div>`;
+            document.getElementById('tab-view').innerHTML = html;
+        }
+
+        function addTimelineMonth(dir) {
+            let m = new Date(dir === 'left' ? timelineMonths[0] + "-01" : timelineMonths[timelineMonths.length - 1] + "-01");
+            m.setMonth(m.getMonth() + (dir === 'left' ? -1 : 1));
+            dir === 'left' ? timelineMonths.unshift(m.toISOString().slice(0, 7)) : timelineMonths.push(m.toISOString().slice(0, 7));
+            renderTimelineTable();
+        }
+
+        // --- Drag & Drop ---
+        function allowDrop(ev) { ev.preventDefault(); ev.currentTarget.style.backgroundColor = 'rgba(255,255,255,0.05)'; }
+        function dragLeave(ev) { ev.currentTarget.style.backgroundColor = ''; }
+        function drag(ev, id, m) { ev.dataTransfer.setData("id", id); ev.dataTransfer.setData("m", m); }
+        async function drop(ev, targetId, newM) {
+            ev.preventDefault(); ev.currentTarget.style.backgroundColor = '';
+            let dragId = parseInt(ev.dataTransfer.getData("id")), oldM = ev.dataTransfer.getData("m");
+            if (dragId !== targetId) return alert("Horizontal moves only.");
+            if (oldM === newM) return;
+            try {
+                if ((await fetch(`/api/projects/budget/${dragId}/move`, { method: 'PUT', headers: {'Content-Type': 'application/json'}, body: JSON.stringify({ old_month: oldM, new_month: newM }) })).ok) {
+                    loadTimelineView(); loadFinancials();
+                }
+            } catch (e) {}
+        }
+
+        // Init
+        loadProjects();
+    </script>
+</body>
+</html>
