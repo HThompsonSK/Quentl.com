@@ -15,11 +15,18 @@
     --text-primary: #EDEDED;
     --text-muted: #888888;
     
-    /* The 'Traffic Lights' & Marmalade Accent */
+    /* The 'Traffic Lights' & Marmalade brand (logo palette) */
     --runway-green: #2ECC71;
     --warning-yellow: #F1C40F;
     --death-red: #E74C3C;
-    --accent-orange: #E36B2C; /* The Marmalade Twang! */
+    --brand-brown: #3B1908;
+    --accent-orange: #A14B14; /* Burnt orange — primary buttons & accents */
+    --accent-orange-hover: #C46328; /* Lighter on hover */
+    --accent-indigo: #A14B14; /* Alias: charts & tab accents match brand orange */
+
+    /* Runway figure uses text-6xl; logo is sized to read clearly in the header (PNG + flex were shrinking it before) */
+    --text-runway-answer: 3.75rem; /* text-6xl — #runway-text */
+    --logo-wordmark-height: clamp(5.75rem, 15vw, 8.5rem); /* prominent wordmark; scales with viewport */
 
     /* --- 2. Typography --- */
     --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
@@ -111,7 +118,7 @@ tr:last-child td {
 
 .btn-accent {
     background-color: var(--accent-orange);
-    color: #ffffff;
+    color: var(--brand-brown);
     border: none;
     padding: 8px 16px;
     border-radius: 6px;
@@ -122,7 +129,81 @@ tr:last-child td {
 }
 
 .btn-accent:hover {
-    background-color: #CF5A1F; /* Slightly darker orange on hover */
+    background-color: var(--accent-orange-hover);
+    color: var(--brand-brown);
+}
+
+/* Top app nav — unique class names so Tailwind CDN cannot override .btn-primary / .btn-accent */
+.site-nav {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+}
+
+.site-nav-link {
+    display: inline-block;
+    text-decoration: none;
+    background-color: var(--bg-surface);
+    color: var(--text-primary);
+    border: 1px solid var(--border-subtle);
+    padding: 8px 16px;
+    border-radius: 6px;
+    font-size: 0.875rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background-color 0.2s ease, border-color 0.2s ease;
+}
+
+.site-nav-link:hover {
+    background-color: #242424;
+    border-color: #3A3A3A;
+}
+
+.site-nav-link--active {
+    background-color: var(--accent-orange);
+    color: var(--brand-brown);
+    border-color: transparent;
+}
+
+.site-nav-link--active:hover {
+    background-color: var(--accent-orange-hover);
+    color: var(--brand-brown);
+}
+
+/* Header wordmark — parent column must use shrink-0 in HTML so flex doesn’t crush the image */
+.site-brand {
+    display: inline-flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.5rem;
+    flex-shrink: 0;
+}
+
+.site-brand-logoLink {
+    display: inline-block;
+    line-height: 0;
+    outline: none;
+    flex-shrink: 0;
+}
+
+.site-brand-logoLink:focus-visible {
+    outline: 2px solid var(--accent-orange);
+    outline-offset: 3px;
+    border-radius: 4px;
+}
+
+.site-brand-tagline {
+    margin: 0;
+}
+
+.site-logo {
+    height: var(--logo-wordmark-height);
+    width: auto;
+    max-width: none;
+    display: block;
+    object-fit: contain;
+    object-position: left center;
+    flex-shrink: 0;
 }
 
 /* ==========================================
