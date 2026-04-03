@@ -10,19 +10,24 @@
 <body class="p-10 font-sans min-h-screen">
     <div class="max-w-6xl mx-auto">
         
-        <header class="mb-8 border-b border-[var(--border-subtle)] pb-4 flex justify-between items-center">
-            <div>
-                <h1 class="text-3xl font-bold tracking-tight text-[var(--text-primary)]">Marmalade</h1>
-                <p class="text-[var(--text-muted)] text-sm mt-1">Click any month to view details</p>
+        <header class="mb-8 border-b border-[var(--border-subtle)] pb-4 flex justify-between items-center flex-wrap gap-4">
+            <div class="shrink-0">
+                <div class="site-brand">
+                    <a href="index.html" class="site-brand-logoLink" aria-label="Marmalade home">
+                        <img src="assets/marmalade-logo.png" alt="Marmalade" class="site-logo" width="512" height="288" />
+                    </a>
+                    <p class="site-brand-tagline text-[var(--text-muted)] text-sm">Click any month to view details</p>
+                </div>
             </div>
-            <div class="space-x-2">
-                <a href="pipeline.html" class="btn-primary">Pipeline</a>
-                <a href="analytics.html" class="btn-primary">Analytics</a>
-                <a href="forecast.html" class="btn-primary">Plan Sales</a>
-                <a href="founder.html" class="btn-accent ml-2">Founder Matrix</a>
-                <a href="projects.html" class="btn-accent">Project Builder</a>
-                <a href="settings.html" class="btn-primary">Settings</a>
-            </div>
+            <nav class="site-nav" aria-label="Main">
+                <a href="index.html" class="site-nav-link site-nav-link--active">Dashboard</a>
+                <a href="pipeline.html" class="site-nav-link">Pipeline</a>
+                <a href="analytics.html" class="site-nav-link">Analytics</a>
+                <a href="forecast.html" class="site-nav-link">Plan Sales</a>
+                <a href="founder.html" class="site-nav-link">Founder Matrix</a>
+                <a href="projects.html" class="site-nav-link">Project Builder</a>
+                <a href="settings.html" class="site-nav-link">Settings</a>
+            </nav>
         </header>
 
         <div id="solvency-hero" class="surface-card mb-8 p-12 transition-colors duration-500 flex flex-col items-center justify-center text-center">

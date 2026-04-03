@@ -590,3 +590,10 @@ def get_projects(company_id: int, conn=Depends(get_db)):
 # --- STATIC FILES (FRONTEND) ---
 frontend_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "../frontend"))
 app.mount("/", StaticFiles(directory=frontend_path, html=True), name="frontend")
+
+
+if __name__ == "__main__":
+    import uvicorn
+
+    port = int(os.getenv("PORT", "9090"))
+    uvicorn.run("main:app", host="127.0.0.1", port=port)

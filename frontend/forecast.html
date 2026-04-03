@@ -3,62 +3,76 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Sales Planner - Jam Co.</title>
+    <title>Plan Sales - Marmalade</title>
+    <link rel="stylesheet" href="global.css">
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
-<body class="bg-gray-50 p-10">
-
-    <div class="max-w-2xl mx-auto">
-        <nav class="flex justify-between items-center mb-8 border-b pb-4">
-            <h1 class="text-3xl font-bold text-gray-800">📈 Sales Planner</h1>
-            <div class="space-x-4">
-                <a href="index.html" class="text-blue-600 hover:text-blue-800 font-medium">← Back to Dashboard</a>
+<body class="p-10 font-sans min-h-screen">
+    <div class="max-w-6xl mx-auto">
+        <header class="mb-8 border-b border-[var(--border-subtle)] pb-4 flex justify-between items-center flex-wrap gap-4">
+            <div class="shrink-0">
+                <div class="site-brand">
+                    <a href="index.html" class="site-brand-logoLink" aria-label="Marmalade home">
+                        <img src="assets/marmalade-logo.png" alt="Marmalade" class="site-logo" width="512" height="288" />
+                    </a>
+                    <p class="site-brand-tagline text-[var(--text-muted)] text-sm">Click any month to view details</p>
+                </div>
             </div>
-        </nav>
+            <nav class="site-nav" aria-label="Main">
+                <a href="index.html" class="site-nav-link">Dashboard</a>
+                <a href="pipeline.html" class="site-nav-link">Pipeline</a>
+                <a href="analytics.html" class="site-nav-link">Analytics</a>
+                <a href="forecast.html" class="site-nav-link site-nav-link--active">Plan Sales</a>
+                <a href="founder.html" class="site-nav-link">Founder Matrix</a>
+                <a href="projects.html" class="site-nav-link">Project Builder</a>
+                <a href="settings.html" class="site-nav-link">Settings</a>
+            </nav>
+        </header>
 
-        <div class="bg-white p-8 rounded-lg shadow-lg border-t-4 border-purple-500">
-            <h2 class="text-xl font-bold text-gray-700 mb-6">Add Monthly Sales Goal</h2>
-            
-            <form id="forecastForm" class="space-y-6">
-                <input type="hidden" name="company_id" value="1">
+        <div class="mb-8">
+            <h2 class="text-2xl font-bold tracking-tight text-[var(--text-primary)]">Plan Sales</h2>
+            <p class="text-[var(--text-muted)] text-sm mt-1">Set monthly unit forecasts by product.</p>
+        </div>
 
-                <div>
-                    <label class="block text-sm font-bold text-gray-700 mb-2">📅 Which Month?</label>
-                    <input type="date" name="month" class="w-full p-3 border rounded-lg bg-gray-50 focus:bg-white ring-purple-500 focus:ring-2" required>
-                </div>
+        <div class="max-w-2xl">
+            <div class="surface-card p-8 border-t-2 border-t-[var(--accent-orange)]">
+                <h3 class="text-xs font-semibold text-[var(--text-muted)] uppercase tracking-widest mb-6 border-b border-[var(--border-subtle)] pb-2">Add monthly sales goal</h3>
 
-                <div>
-                    <label class="block text-sm font-bold text-gray-700 mb-2">🍓 Which Product?</label>
-                    <select id="productSelect" name="product_id" class="w-full p-3 border rounded-lg bg-gray-50 focus:bg-white" required>
-                        <option value="">Loading products...</option>
-                    </select>
-                </div>
+                <form id="forecastForm" class="space-y-6">
+                    <input type="hidden" name="company_id" value="1">
 
-                <div>
-                    <label class="block text-sm font-bold text-gray-700 mb-2">📦 How many units will you sell?</label>
-                    <input type="number" name="units" placeholder="e.g. 50" class="w-full p-3 border rounded-lg" required>
-                </div>
+                    <div>
+                        <label class="block text-[10px] font-semibold text-[var(--text-muted)] uppercase tracking-widest mb-2">Month</label>
+                        <input type="date" name="month" class="w-full font-mono" required>
+                    </div>
 
-                <button type="submit" class="w-full bg-purple-600 text-white py-3 rounded-lg hover:bg-purple-700 font-bold text-lg shadow">
-                    💾 Save Forecast
-                </button>
-            </form>
+                    <div>
+                        <label class="block text-[10px] font-semibold text-[var(--text-muted)] uppercase tracking-widest mb-2">Product</label>
+                        <select id="productSelect" name="product_id" class="w-full font-mono" required>
+                            <option value="">Loading products...</option>
+                        </select>
+                    </div>
+
+                    <div>
+                        <label class="block text-[10px] font-semibold text-[var(--text-muted)] uppercase tracking-widest mb-2">Units to sell</label>
+                        <input type="number" name="units" placeholder="e.g. 50" class="w-full font-mono" required>
+                    </div>
+
+                    <button type="submit" class="btn-accent w-full">Save forecast</button>
+                </form>
+            </div>
         </div>
     </div>
 
     <script>
-        // 1. Load Products into the Dropdown when page opens
         async function loadProducts() {
             try {
-                // We need a way to get products. 
-                // Wait! We haven't built a GET /api/products endpoint yet.
-                // We will add that small fix to the backend in a moment.
                 const res = await fetch('/api/products?company_id=1');
                 const products = await res.json();
-                
+
                 const select = document.getElementById('productSelect');
-                select.innerHTML = '<option value="">-- Select a Product --</option>';
-                
+                select.innerHTML = '<option value="">— Select a product —</option>';
+
                 products.forEach(p => {
                     const option = document.createElement('option');
                     option.value = p.id;
@@ -66,17 +80,15 @@
                     select.appendChild(option);
                 });
             } catch (err) {
-                console.error("Error loading products", err);
+                console.error('Error loading products', err);
             }
         }
 
-        // 2. Handle Form Submit
         document.getElementById('forecastForm').addEventListener('submit', async (e) => {
             e.preventDefault();
             const formData = new FormData(e.target);
             const data = Object.fromEntries(formData.entries());
 
-            // Format date to always be the 1st of the month (YYYY-MM-01)
             const dateObj = new Date(data.month);
             data.month = `${dateObj.getFullYear()}-${String(dateObj.getMonth() + 1).padStart(2, '0')}-01`;
 
@@ -86,20 +98,18 @@
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify(data)
                 });
-                
+
                 if (res.ok) {
-                    alert('✅ Sales Goal Saved!');
-                    // Don't reset form so they can easily add another product for same month
+                    alert('Sales goal saved.');
                 } else {
-                    alert('❌ Error saving forecast');
+                    alert('Could not save forecast.');
                 }
             } catch (err) {
                 console.error(err);
-                alert('Server Error');
+                alert('Server error');
             }
         });
 
-        // Run on load
         loadProducts();
     </script>
 </body>

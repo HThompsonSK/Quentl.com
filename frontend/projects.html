@@ -9,10 +9,30 @@
 <body class="p-10 font-sans min-h-screen">
     <div class="max-w-6xl mx-auto">
         
-        <nav class="flex justify-between items-center mb-8 border-b border-[var(--border-subtle)] pb-4">
-            <h1 class="text-3xl font-bold tracking-tight">🏗️ Project CAPEX</h1>
-            <a href="index.html" class="text-[var(--text-muted)] hover:text-[var(--text-primary)] font-medium transition">← Back to Dashboard</a>
-        </nav>
+        <header class="mb-8 border-b border-[var(--border-subtle)] pb-4 flex justify-between items-center flex-wrap gap-4">
+            <div class="shrink-0">
+                <div class="site-brand">
+                    <a href="index.html" class="site-brand-logoLink" aria-label="Marmalade home">
+                        <img src="assets/marmalade-logo.png" alt="Marmalade" class="site-logo" width="512" height="288" />
+                    </a>
+                    <p class="site-brand-tagline text-[var(--text-muted)] text-sm">Click any month to view details</p>
+                </div>
+            </div>
+            <nav class="site-nav" aria-label="Main">
+                <a href="index.html" class="site-nav-link">Dashboard</a>
+                <a href="pipeline.html" class="site-nav-link">Pipeline</a>
+                <a href="analytics.html" class="site-nav-link">Analytics</a>
+                <a href="forecast.html" class="site-nav-link">Plan Sales</a>
+                <a href="founder.html" class="site-nav-link">Founder Matrix</a>
+                <a href="projects.html" class="site-nav-link site-nav-link--active">Project Builder</a>
+                <a href="settings.html" class="site-nav-link">Settings</a>
+            </nav>
+        </header>
+
+        <div class="mb-8">
+            <h2 class="text-2xl font-bold tracking-tight text-[var(--text-primary)]">Project Builder</h2>
+            <p class="text-[var(--text-muted)] text-sm mt-1">CAPEX projects, budgets, and cashflow timelines.</p>
+        </div>
 
         <div id="view-list">
             <div class="surface-card p-6 mb-8 border-t-2 border-t-[var(--accent-orange)]">
