@@ -1,0 +1,256 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sales planner - Marmalade</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="global.css">
+    <script src="theme.js"></script>
+</head>
+<body class="p-10 font-sans min-h-screen" data-nav="sales">
+    <div class="max-w-6xl mx-auto">
+        <header class="site-header">
+            <div class="shrink-0">
+                <div class="site-brand">
+                    <a href="index.html" class="site-brand-logoLink" aria-label="Marmalade home">
+                        <span class="site-logo-text">Marmalade</span>
+                    </a>
+                </div>
+            </div>
+            <div class="site-header-actions">
+            <nav id="site-nav" class="site-nav" aria-label="Main"></nav>
+            <button type="button" class="theme-toggle" data-theme-toggle aria-label="Toggle color scheme" title="Light / dark mode">
+                <span class="theme-toggle__thumb" aria-hidden="true"></span>
+            </button>
+            </div>
+        </header>
+        <script src="site-nav.js"></script>
+
+        <div class="mb-8">
+            <h2 class="text-2xl font-bold tracking-tight text-[var(--text-primary)]">Sales planner</h2>
+            <p class="text-[var(--text-muted)] text-sm mt-1">Pipeline deals, acquired customers, and links to unit forecasts and cashflow.</p>
+            <p class="text-sm mt-3">
+                <a href="forecast.html" class="text-[var(--accent-orange)] hover:underline font-medium">Unit forecasts by product</a>
+                <span class="text-[var(--text-muted)] mx-2">·</span>
+                <a href="projects.html" class="text-[var(--accent-orange)] hover:underline font-medium">Cashflow generator</a>
+                <span class="text-[var(--text-muted)] mx-2">·</span>
+                <a href="financial-model.html#cash" class="text-[var(--accent-orange)] hover:underline font-medium">Financial model → Cashflow</a>
+            </p>
+        </div>
+
+        <div class="grid grid-cols-1 lg:grid-cols-2 gap-6 mb-8">
+            <div class="surface-card p-6 border-t-2 border-t-[var(--accent-orange)] h-fit">
+                <h3 class="text-xs font-semibold text-[var(--text-muted)] uppercase tracking-widest mb-4 border-b border-[var(--border-subtle)] pb-2">Acquired customers</h3>
+                <p class="text-sm text-[var(--text-muted)] mb-4">Stored locally in this browser until synced to the server. Use for contract value tracking (real or estimated).</p>
+                <form id="acquiredForm" class="space-y-4 mb-6">
+                    <div>
+                        <label class="block text-[10px] font-semibold text-[var(--text-muted)] uppercase tracking-widest mb-2">Client name</label>
+                        <input type="text" id="acq_name" class="w-full font-mono" placeholder="e.g. Acme Ltd" required>
+                    </div>
+                    <div class="grid grid-cols-2 gap-4">
+                        <div>
+                            <label class="block text-[10px] font-semibold text-[var(--text-muted)] uppercase tracking-widest mb-2">Contract value (£)</label>
+                            <input type="number" id="acq_value" step="0.01" class="w-full font-mono" required>
+                        </div>
+                        <div>
+                            <label class="block text-[10px] font-semibold text-[var(--text-muted)] uppercase tracking-widest mb-2">Value type</label>
+                            <select id="acq_type" class="w-full font-mono">
+                                <option value="real">Real</option>
+                                <option value="estimated">Estimated</option>
+                            </select>
+                        </div>
+                    </div>
+                    <button type="submit" class="btn-accent w-full">Add acquired customer</button>
+                </form>
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse text-sm">
+                        <thead>
+                            <tr>
+                                <th>Client</th>
+                                <th class="text-right">Value</th>
+                                <th class="text-center">Type</th>
+                                <th class="text-center">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="acquiredTableBody"></tbody>
+                    </table>
+                </div>
+            </div>
+
+            <div class="surface-card p-6 border-t-2 border-t-[var(--border-subtle)] h-fit">
+                <h3 class="text-xs font-semibold text-[var(--text-muted)] uppercase tracking-widest mb-4 border-b border-[var(--border-subtle)] pb-2">Sales pipeline</h3>
+                <p class="text-sm text-[var(--text-muted)] mb-4">Weighted opportunities feed runway in <a href="financial-model.html#cash" class="text-[var(--accent-orange)] hover:underline font-medium">Financial model → Cashflow</a> and on the dashboard. Payment timing will match project cashflow installments when you wire deals to projects.</p>
+                <form id="leadForm" class="space-y-5">
+                    <input type="hidden" name="company_id" value="1">
+                    <div>
+                        <label class="block text-[10px] font-semibold text-[var(--text-muted)] uppercase tracking-widest mb-2">Client name</label>
+                        <input type="text" name="client_name" placeholder="e.g. Whole Foods" class="w-full font-mono" required>
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-semibold text-[var(--text-muted)] uppercase tracking-widest mb-2">Contract value (£)</label>
+                        <input type="number" name="contract_value" placeholder="10000" class="w-full font-mono" required>
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-semibold text-[var(--text-muted)] uppercase tracking-widest mb-2">Probability of win (%)</label>
+                        <input type="number" name="probability" placeholder="50" min="0" max="100" class="w-full font-mono" required>
+                        <p class="text-[10px] font-mono text-[var(--text-muted)] mt-2 opacity-80">Used for weighted pipeline on the dashboard.</p>
+                    </div>
+                    <button type="submit" class="btn-accent w-full">Add to pipeline</button>
+                </form>
+            </div>
+        </div>
+
+        <div class="surface-card p-6 border-t-2 border-t-[var(--border-subtle)] mb-8">
+            <h3 class="text-xs font-semibold text-[var(--text-muted)] uppercase tracking-widest mb-2 border-b border-[var(--border-subtle)] pb-2">Accounting actuals (this month)</h3>
+            <p class="text-xs text-[var(--text-muted)] mb-4">Accrual = invoiced revenue by invoice date. Cash = customer payments by payment date. <a href="settings.html" class="text-[var(--accent-orange)] hover:underline font-medium">Connect &amp; sync in Settings</a>.</p>
+            <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div class="rounded-lg border border-[var(--border-subtle)] p-4">
+                    <div class="text-[10px] uppercase tracking-widest text-[var(--text-muted)] mb-1">Accrual</div>
+                    <div id="snapAccrual" class="text-xl font-mono text-[var(--text-primary)]">—</div>
+                </div>
+                <div class="rounded-lg border border-[var(--border-subtle)] p-4">
+                    <div class="text-[10px] uppercase tracking-widest text-[var(--text-muted)] mb-1">Cash</div>
+                    <div id="snapCash" class="text-xl font-mono text-[var(--text-primary)]">—</div>
+                </div>
+            </div>
+        </div>
+
+        <div class="surface-card overflow-hidden border-t-2 border-t-[var(--border-subtle)]">
+            <div class="px-6 py-5 border-b border-[var(--border-subtle)]">
+                <h3 class="text-xs font-semibold text-[var(--text-muted)] uppercase tracking-widest">Current opportunities</h3>
+            </div>
+            <table class="w-full text-left border-collapse">
+                <thead>
+                    <tr>
+                        <th>Client</th>
+                        <th class="text-right">Value</th>
+                        <th class="text-right">Prob.</th>
+                        <th class="text-right">Weighted</th>
+                        <th class="text-center">Action</th>
+                    </tr>
+                </thead>
+                <tbody id="leadsTableBody"></tbody>
+            </table>
+        </div>
+    </div>
+
+    <script>
+        var ACQUIRED_KEY = 'marmalade_acquired_customers_v1';
+
+        function loadAcquired() {
+            var raw = localStorage.getItem(ACQUIRED_KEY);
+            var rows = raw ? JSON.parse(raw) : [];
+            var tbody = document.getElementById('acquiredTableBody');
+            tbody.innerHTML = '';
+            rows.forEach(function (row, idx) {
+                var tr = document.createElement('tr');
+                tr.className = 'hover:bg-[var(--row-hover)] transition';
+                tr.innerHTML =
+                    '<td class="font-medium text-[var(--text-primary)]">' + row.name + '</td>' +
+                    '<td class="text-right font-mono">£' + parseFloat(row.value).toLocaleString() + '</td>' +
+                    '<td class="text-center text-[var(--text-muted)] text-xs">' + row.type + '</td>' +
+                    '<td class="text-center"><button type="button" class="btn-primary text-xs py-1 px-2 hover:border-[var(--death-red)] hover:text-[var(--death-red)]" data-idx="' + idx + '">Remove</button></td>';
+                tbody.appendChild(tr);
+            });
+            tbody.querySelectorAll('button[data-idx]').forEach(function (btn) {
+                btn.addEventListener('click', function () {
+                    var i = parseInt(btn.getAttribute('data-idx'), 10);
+                    rows.splice(i, 1);
+                    localStorage.setItem(ACQUIRED_KEY, JSON.stringify(rows));
+                    loadAcquired();
+                });
+            });
+        }
+
+        document.getElementById('acquiredForm').addEventListener('submit', function (e) {
+            e.preventDefault();
+            var name = document.getElementById('acq_name').value.trim();
+            var value = document.getElementById('acq_value').value;
+            var type = document.getElementById('acq_type').value;
+            var raw = localStorage.getItem(ACQUIRED_KEY);
+            var rows = raw ? JSON.parse(raw) : [];
+            rows.push({ name: name, value: value, type: type });
+            localStorage.setItem(ACQUIRED_KEY, JSON.stringify(rows));
+            e.target.reset();
+            loadAcquired();
+        });
+
+        async function loadLeads() {
+            const res = await fetch('/api/leads/1');
+            const leads = await res.json();
+            const tbody = document.getElementById('leadsTableBody');
+            tbody.innerHTML = '';
+
+            leads.forEach(lead => {
+                const weighted = lead.contract_value * (lead.probability / 100);
+                const tr = document.createElement('tr');
+                tr.className = 'hover:bg-[var(--row-hover)] transition';
+                tr.innerHTML = `
+                    <td class="font-medium text-[var(--text-primary)]">${lead.client_name}</td>
+                    <td class="text-right font-mono text-[var(--text-primary)]">£${parseFloat(lead.contract_value).toLocaleString()}</td>
+                    <td class="text-right font-mono text-[var(--text-muted)]">${lead.probability}%</td>
+                    <td class="text-right font-mono font-medium text-[var(--runway-green)]">£${weighted.toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: 0 })}</td>
+                    <td class="text-center">
+                        <button type="button" onclick="deleteLead(${lead.id})" class="btn-primary text-xs py-1 px-2 hover:border-[var(--death-red)] hover:text-[var(--death-red)]">Remove</button>
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        document.getElementById('leadForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const data = Object.fromEntries(new FormData(e.target));
+            await fetch('/api/leads', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify(data)
+            });
+            e.target.reset();
+            loadLeads();
+        });
+
+        async function deleteLead(id) {
+            if (confirm('Remove this lead?')) {
+                await fetch(`/api/leads/${id}`, { method: 'DELETE' });
+                loadLeads();
+            }
+        }
+
+        async function loadActualsSnapshot() {
+            try {
+                const res = await fetch('/api/actuals/summary/1');
+                const data = await res.json();
+                const ym = new Date().toISOString().slice(0, 7);
+                let acc = null;
+                let cash = null;
+                (data.by_month || []).forEach(function (row) {
+                    const m = String(row.month).slice(0, 7);
+                    if (m !== ym) return;
+                    if (row.basis === 'accrual') acc = parseFloat(row.total_amount);
+                    if (row.basis === 'cash') cash = parseFloat(row.total_amount);
+                });
+                document.getElementById('snapAccrual').textContent =
+                    acc == null ? '—' : (rowCurrency(data, 'accrual', ym) + acc.toLocaleString(undefined, { maximumFractionDigits: 0 }));
+                document.getElementById('snapCash').textContent =
+                    cash == null ? '—' : (rowCurrency(data, 'cash', ym) + cash.toLocaleString(undefined, { maximumFractionDigits: 0 }));
+            } catch (e) {
+                document.getElementById('snapAccrual').textContent = '—';
+                document.getElementById('snapCash').textContent = '—';
+            }
+        }
+        function rowCurrency(data, basis, ym) {
+            var cur = '';
+            (data.by_month || []).forEach(function (row) {
+                if (String(row.month).slice(0, 7) === ym && row.basis === basis && row.currency) cur = row.currency + ' ';
+            });
+            return cur;
+        }
+
+        loadAcquired();
+        loadLeads();
+        loadActualsSnapshot();
+    </script>
+</body>
+</html>

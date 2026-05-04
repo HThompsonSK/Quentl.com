@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Financial model - Marmalade</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="global.css">
+    <script src="theme.js"></script>
+</head>
+<body class="p-10 font-sans min-h-screen" data-nav="financial">
+    <div class="max-w-6xl mx-auto">
+        <header class="site-header">
+            <div class="shrink-0">
+                <div class="site-brand">
+                    <a href="index.html" class="site-brand-logoLink" aria-label="Marmalade home">
+                        <span class="site-logo-text">Marmalade</span>
+                    </a>
+                </div>
+            </div>
+            <div class="site-header-actions">
+                <nav id="site-nav" class="site-nav" aria-label="Main"></nav>
+                <button type="button" class="theme-toggle" data-theme-toggle aria-label="Toggle color scheme" title="Light / dark mode">
+                    <span class="theme-toggle__thumb" aria-hidden="true"></span>
+                </button>
+            </div>
+        </header>
+        <script src="site-nav.js"></script>
+
+        <div class="mb-6">
+            <h2 class="text-2xl font-bold tracking-tight text-[var(--text-primary)]">Financial model</h2>
+            <p class="text-[var(--text-muted)] text-sm mt-1">Forecast-driven P&amp;L, cash proxies, balance sheet scaffold, and unit economics. Data layer expands when you connect accounting (Xero, Shopify).</p>
+        </div>
+
+        <nav class="fm-subnav" aria-label="Financial model sections">
+            <a href="#pl" class="fm-subnav-link" data-fm-tab="pl">Profit and loss</a>
+            <a href="#cash" class="fm-subnav-link" data-fm-tab="cash">Cashflow</a>
+            <a href="#bs" class="fm-subnav-link" data-fm-tab="bs">Balance sheet</a>
+            <a href="#saas" class="fm-subnav-link" data-fm-tab="saas">Unit economics &amp; SaaS</a>
+        </nav>
+
+        <div id="fm-panel-pl">
+            <div class="surface-card p-6 border-t-2 border-t-[var(--accent-orange)] mb-8">
+                <h3 class="text-xs font-semibold text-[var(--text-muted)] uppercase tracking-widest mb-4">P&amp;L matrix (forecast)</h3>
+                <div id="fm-pl-matrix" class="fm-matrix-wrap text-sm text-[var(--text-muted)]">Loading…</div>
+            </div>
+            <div class="surface-card p-6 border-t-2 border-t-[var(--border-subtle)]">
+                <h3 class="text-xs font-semibold text-[var(--text-muted)] uppercase tracking-widest mb-4">Contribution by product</h3>
+                <div id="fm-pl-products" class="fm-matrix-wrap text-sm">Loading…</div>
+            </div>
+        </div>
+
+        <div id="fm-panel-cash" hidden>
+            <div class="surface-card p-6 border-t-2 border-t-[var(--runway-green)] mb-8">
+                <h3 class="text-xs font-semibold text-[var(--text-muted)] uppercase tracking-widest mb-4">Runway &amp; burn</h3>
+                <div id="fm-runway-block" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 text-sm"></div>
+                <p id="fm-runway-note" class="text-xs text-[var(--text-muted)] mt-4 font-mono leading-relaxed"></p>
+            </div>
+            <div class="surface-card p-6 border-t-2 border-t-[var(--accent-orange)]">
+                <h3 class="text-xs font-semibold text-[var(--text-muted)] uppercase tracking-widest mb-4">Cashflow proxy (monthly)</h3>
+                <div id="fm-cash-matrix" class="fm-matrix-wrap text-sm text-[var(--text-muted)]">Loading…</div>
+            </div>
+        </div>
+
+        <div id="fm-panel-bs" hidden>
+            <div class="surface-card p-6 border-t-2 border-t-[var(--accent-indigo)] mb-6">
+                <h3 class="text-xs font-semibold text-[var(--text-muted)] uppercase tracking-widest mb-4">Balance sheet (scaffold)</h3>
+                <p class="text-sm text-[var(--text-muted)] mb-4">Full lines populate when accounting sync is connected. Cash reflects your latest <a href="projects.html#liquidity" class="text-[var(--accent-orange)] hover:underline font-medium">liquidity snapshot</a>.</p>
+                <div id="fm-bs-lines" class="space-y-2 text-sm font-mono"></div>
+            </div>
+            <div class="surface-card p-6 border-t-2 border-t-[var(--border-subtle)]">
+                <h3 class="text-xs font-semibold text-[var(--text-muted)] uppercase tracking-widest mb-4">Ratios (working capital &amp; efficiency)</h3>
+                <div id="fm-bs-ratios" class="text-sm font-mono text-[var(--text-muted)]"></div>
+            </div>
+        </div>
+
+        <div id="fm-panel-saas" hidden>
+            <div class="surface-card p-6 border-t-2 border-t-[var(--accent-orange)] mb-8">
+                <h3 class="text-xs font-semibold text-[var(--text-muted)] uppercase tracking-widest mb-4">Computed from latest monthly metrics + forecast</h3>
+                <div id="fm-kpi-grid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4"></div>
+            </div>
+            <div class="surface-card p-6 border-t-2 border-t-[var(--border-subtle)]">
+                <h3 class="text-xs font-semibold text-[var(--text-muted)] uppercase tracking-widest mb-4">Formulas (reference)</h3>
+                <dl id="fm-kpi-formulas" class="space-y-3 text-sm text-[var(--text-muted)]"></dl>
+            </div>
+        </div>
+    </div>
+
+    <script src="financial-model-nav.js"></script>
+    <script>
+        (function () {
+            var COMPANY_ID = 1;
+
+            function fmtCurrency(v) {
+                if (v == null || v === '' || (typeof v === 'number' && isNaN(v))) return '—';
+                return '£' + Number(v).toLocaleString(undefined, { maximumFractionDigits: 0 });
+            }
+
+            function fmtNum(v, digits) {
+                if (v == null || v === '' || (typeof v === 'number' && isNaN(v))) return '—';
+                return Number(v).toLocaleString(undefined, { minimumFractionDigits: 0, maximumFractionDigits: digits != null ? digits : 2 });
+            }
+
+            function buildMatrix(columns, rows) {
+                if (!columns || !columns.length) {
+                    return '<p class="text-[var(--text-muted)]">No forecast months yet. Add unit forecasts under Sales.</p>';
+                }
+                var th = columns.map(function (c) {
+                    var d = c.length >= 10 ? c.slice(0, 7) : c;
+                    return '<th>' + d + '</th>';
+                }).join('');
+                var body = rows.map(function (row) {
+                    var cells = (row.cells || []).map(function (cell) {
+                        if (cell == null) return '<td>—</td>';
+                        var k = row.key || '';
+                        if (k === 'gross_margin_percent') return '<td>' + fmtNum(cell, 2) + '%</td>';
+                        if (k === 'dol') return '<td>' + fmtNum(cell, 2) + '</td>';
+                        if (k === 'rule_of_40') return '<td>' + (cell != null ? fmtNum(cell, 1) : '—') + '</td>';
+                        if (['revenue', 'variable_costs', 'contribution_margin', 'fixed_costs', 'net_profit'].indexOf(k) >= 0) {
+                            return '<td>' + fmtCurrency(cell) + '</td>';
+                        }
+                        if (k === 'operating_cash_proxy' || k === 'capex' || k === 'net_cash_flow_proxy') {
+                            return '<td>' + fmtCurrency(cell) + '</td>';
+                        }
+                        return '<td>' + fmtNum(cell, 2) + '</td>';
+                    }).join('');
+                    return '<tr><td class="fm-matrix__label">' + row.label + '</td>' + cells + '</tr>';
+                }).join('');
+                return '<table class="fm-matrix"><thead><tr><th class="fm-matrix__label">Line</th>' + th + '</tr></thead><tbody>' + body + '</tbody></table>';
+            }
+
+            async function loadPL() {
+                var root = document.getElementById('fm-pl-matrix');
+                var prod = document.getElementById('fm-pl-products');
+                try {
+                    var res = await fetch('/api/financial-model/pl/' + COMPANY_ID);
+                    var data = await res.json();
+                    root.innerHTML = buildMatrix(data.columns, data.rows);
+                    if (!data.by_product_month || !data.by_product_month.length) {
+                        prod.innerHTML = '<p class="text-[var(--text-muted)]">No product-level forecast rows.</p>';
+                        return;
+                    }
+                    var head = '<table class="fm-matrix"><thead><tr><th class="fm-matrix__label">Product</th><th>Month</th><th class="text-right">Units</th><th class="text-right">CM / unit</th><th class="text-right">CM %</th></tr></thead><tbody>';
+                    var rows = data.by_product_month.map(function (r) {
+                        return '<tr><td class="fm-matrix__label">' + r.product_name + '</td><td>' + (r.forecast_month || '').slice(0, 7) + '</td><td class="text-right">' + r.units_forecasted + '</td><td class="text-right">' + fmtNum(r.cm_per_unit, 2) + '</td><td class="text-right">' + (r.cm_ratio_percent != null ? r.cm_ratio_percent + '%' : '—') + '</td></tr>';
+                    }).join('');
+                    prod.innerHTML = head + rows + '</tbody></table>';
+                } catch (e) {
+                    console.error(e);
+                    root.textContent = 'Could not load P&L.';
+                }
+            }
+
+            async function loadCashflow() {
+                var mx = document.getElementById('fm-cash-matrix');
+                var rw = document.getElementById('fm-runway-block');
+                var note = document.getElementById('fm-runway-note');
+                try {
+                    var res = await fetch('/api/financial-model/cashflow/' + COMPANY_ID);
+                    var data = await res.json();
+                    mx.innerHTML = buildMatrix(data.columns, data.rows || []);
+                    var r = data.runway || {};
+                    rw.innerHTML =
+                        '<div class="surface-card p-4 border border-[var(--border-subtle)]"><p class="text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-widest mb-1">Pipeline-adjusted runway</p><p class="text-2xl font-mono text-[var(--text-primary)]">' + (r.estimated_months_left != null ? r.estimated_months_left.toFixed(1) + ' mo' : '—') + '</p></div>' +
+                        '<div class="surface-card p-4 border border-[var(--border-subtle)]"><p class="text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-widest mb-1">Net-burn runway</p><p class="text-2xl font-mono text-[var(--accent-orange)]">' + (r.runway_net_burn_months != null ? r.runway_net_burn_months.toFixed(1) + ' mo' : '—') + '</p><p class="text-xs text-[var(--text-muted)] mt-1">If net burn ≤ 0, runway is undefined.</p></div>' +
+                        '<div class="surface-card p-4 border border-[var(--border-subtle)]"><p class="text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-widest mb-1">Gross burn (fixed)</p><p class="text-xl font-mono">' + fmtCurrency(r.gross_burn) + '</p><p class="text-[10px] text-[var(--text-muted)] mt-2">Latest month revenue: ' + fmtCurrency(r.latest_month_revenue) + '</p><p class="text-[10px] text-[var(--text-muted)]">Net burn: ' + fmtCurrency(r.net_burn) + '</p></div>';
+                    note.textContent = r.runway_definition_note || '';
+                } catch (e) {
+                    console.error(e);
+                    mx.textContent = 'Could not load cashflow.';
+                }
+            }
+
+            async function loadBS() {
+                var lines = document.getElementById('fm-bs-lines');
+                var ratios = document.getElementById('fm-bs-ratios');
+                try {
+                    var res = await fetch('/api/financial-model/balance-sheet/' + COMPANY_ID);
+                    var data = await res.json();
+                    lines.innerHTML = (data.lines || []).map(function (L) {
+                        var amt = L.amount != null ? fmtCurrency(L.amount) : '—';
+                        var nt = L.note ? ' <span class="text-xs text-[var(--text-muted)]">(' + L.note + ')</span>' : '';
+                        return '<div class="flex flex-wrap justify-between gap-2 border-b border-[var(--border-subtle)] py-2"><span class="text-[var(--text-primary)]">' + L.label + '</span><span>' + amt + '</span>' + nt + '</div>';
+                    }).join('') || '<p class="text-[var(--text-muted)]">No lines.</p>';
+                    var R = data.ratios || {};
+                    ratios.innerHTML = '<p>Net working capital: ' + (R.net_working_capital != null ? fmtNum(R.net_working_capital) : '—') + '</p>' +
+                        '<p>Current ratio: ' + (R.current_ratio != null ? fmtNum(R.current_ratio) : '—') + '</p>' +
+                        '<p>Quick ratio: ' + (R.quick_ratio != null ? fmtNum(R.quick_ratio) : '—') + '</p>' +
+                        '<p>Asset turnover: ' + (R.asset_turnover != null ? fmtNum(R.asset_turnover) : '—') + '</p>' +
+                        '<p>ROA: ' + (R.roa != null ? fmtNum(R.roa) : '—') + '</p>' +
+                        '<p class="mt-2 text-xs">' + (R.note || '') + '</p>';
+                } catch (e) {
+                    console.error(e);
+                    lines.textContent = 'Could not load balance sheet.';
+                }
+            }
+
+            function kpiCard(title, value, hint) {
+                return '<div class="surface-card p-4 border border-[var(--border-subtle)]"><p class="text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-widest mb-1">' + title + '</p><p class="text-xl font-mono text-[var(--text-primary)]">' + value + '</p>' + (hint ? '<p class="text-xs text-[var(--text-muted)] mt-2">' + hint + '</p>' : '') + '</div>';
+            }
+
+            async function loadKpis() {
+                var grid = document.getElementById('fm-kpi-grid');
+                var formulas = document.getElementById('fm-kpi-formulas');
+                try {
+                    var res = await fetch('/api/financial-model/kpis/' + COMPANY_ID);
+                    var data = await res.json();
+                    var c = data.computed || {};
+                    grid.innerHTML =
+                        kpiCard('MRR', c.mrr != null ? fmtCurrency(c.mrr) : '—', 'Set via POST /api/metrics') +
+                        kpiCard('ARR', c.arr != null ? fmtCurrency(c.arr) : '—', 'MRR × 12') +
+                        kpiCard('NRR %', c.nrr_percent != null ? c.nrr_percent + '%' : '—', 'Needs starting + expansion − churn − contraction MRR') +
+                        kpiCard('CAC (from inputs)', c.cac_from_inputs != null ? fmtCurrency(c.cac_from_inputs) : '—', 'S&amp;M spend / new customers') +
+                        kpiCard('CAC (stored)', c.cac_stored != null ? fmtCurrency(c.cac_stored) : '—', 'Raw field on monthly row') +
+                        kpiCard('LTV:CAC', c.ltv_cac_ratio != null ? fmtNum(c.ltv_cac_ratio, 2) + '×' : '—', 'Target > 3×') +
+                        kpiCard('CAC payback (mo)', c.cac_payback_months != null ? fmtNum(c.cac_payback_months, 1) : '—', 'CAC / (MRR × gross margin %)') +
+                        kpiCard('Logo churn %', c.monthly_churn_percent != null ? c.monthly_churn_percent + '%' : '—', 'Customers lost / start') +
+                        kpiCard('Latest gross margin %', c.latest_forecast_gross_margin_percent != null ? c.latest_forecast_gross_margin_percent + '%' : '—', 'From forecast P&amp;L');
+
+                    var defs = [
+                        ['Contribution margin (unit)', 'Selling price − variable cost per unit; CM % = CM per unit / price × 100.'],
+                        ['DOL', 'Contribution margin / EBIT (here EBIT ≈ net profit from forecast).'],
+                        ['Rule of 40', 'YoY revenue growth % + net margin % proxy (not EBITDA until accounting mapped).'],
+                        ['LTV', 'Uses stored LTV; full formula (ARPA × gross margin / churn) when inputs complete.'],
+                        ['Working capital ratios', 'Populated from balance sheet when Xero provides current assets &amp; liabilities.']
+                    ];
+                    formulas.innerHTML = defs.map(function (d) {
+                        return '<div class="border-b border-[var(--border-subtle)] pb-2"><dt class="font-medium text-[var(--text-primary)]">' + d[0] + '</dt><dd class="mt-1">' + d[1] + '</dd></div>';
+                    }).join('');
+                } catch (e) {
+                    console.error(e);
+                    grid.textContent = 'Could not load KPIs.';
+                }
+            }
+
+            document.addEventListener('DOMContentLoaded', function () {
+                loadPL();
+                loadCashflow();
+                loadBS();
+                loadKpis();
+            });
+        })();
+    </script>
+</body>
+</html>

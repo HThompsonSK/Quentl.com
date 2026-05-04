@@ -5,12 +5,41 @@
 
 @import url('https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=Roboto+Mono:wght@400;500&display=swap');
 
-:root {
+/* Balgin (Studio Sun) — add licensed .woff2 files in assets/fonts/ (extra-light for wordmark; bold optional) */
+@font-face {
+    font-family: 'Balgin';
+    src: local('Balgin Display Extra Light'),
+        local('Balgin Display Light'),
+        local('Balgin Extra Light'),
+        local('Balgin Light'),
+        url('assets/fonts/balgin-extra-light.woff2') format('woff2');
+    font-weight: 200;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'Balgin';
+    src: local('Balgin Display Bold'),
+        local('Balgin Bold'),
+        url('assets/fonts/balgin-display.woff2') format('woff2');
+    font-weight: 700;
+    font-style: normal;
+    font-display: swap;
+}
+
+:root,
+[data-theme="dark"] {
     /* --- 1. Color Palette --- */
     --bg-dark: #0A0A0A;
     --bg-surface: #1A1A1A;
     --border-subtle: #2A2A2A;
-    
+    --surface-hover: #242424;
+    --border-hover: #3A3A3A;
+    --bg-elevated: #141414;
+    --row-hover: #222222;
+    --bg-row-muted: #111111;
+
     /* Text */
     --text-primary: #EDEDED;
     --text-muted: #888888;
@@ -23,14 +52,109 @@
     --accent-orange: #A14B14; /* Burnt orange — primary buttons & accents */
     --accent-orange-hover: #C46328; /* Lighter on hover */
     --accent-indigo: #A14B14; /* Alias: charts & tab accents match brand orange */
+    /* Readable on #0A0A0A — #140004 alone is effectively invisible on this background */
+    --logo-wordmark-color: #A14004;
+    --logo-wordmark-color-hover: #E8A05D;
 
-    /* Runway figure uses text-6xl; logo is sized to read clearly in the header (PNG + flex were shrinking it before) */
     --text-runway-answer: 3.75rem; /* text-6xl — #runway-text */
-    --logo-wordmark-height: clamp(5.75rem, 15vw, 8.5rem); /* prominent wordmark; scales with viewport */
+    --logo-wordmark-size: clamp(2.35rem, 6.25vw, 3.75rem);
+    --logo-wordmark-weight: 200;
+    --logo-wordmark-tracking: -0.087em; /* tracking -87 (thousandths of em) */
+    --logo-wordmark-stretch: expanded;
+
+    /* Semantic surfaces (tables, status chips) */
+    --status-good-bg: #1a2b22;
+    --status-good-hover: #20362b;
+    --status-bad-bg: #3a1c1c;
+
+    /* Charts (read via getComputedStyle in analytics) */
+    --chart-muted: #888888;
+    --chart-grid: #2A2A2A;
+    --chart-text: #EDEDED;
 
     /* --- 2. Typography --- */
     --font-sans: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Helvetica, Arial, sans-serif;
     --font-mono: 'Roboto Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+    --font-brand: 'Balgin', system-ui, -apple-system, BlinkMacSystemFont, sans-serif;
+}
+
+[data-theme="light"] {
+    --bg-dark: #FAFAFA;
+    --bg-surface: #FFFFFF;
+    --border-subtle: #E4E4E7;
+    --surface-hover: #F4F4F5;
+    --border-hover: #D4D4D8;
+    --bg-elevated: #F4F4F5;
+    --row-hover: #F0F0F0;
+    --bg-row-muted: #E8E8E8;
+
+    --text-primary: #18181B;
+    --text-muted: #71717A;
+
+    --logo-wordmark-color: #8B3A0E;
+    --logo-wordmark-color-hover: #C46328;
+
+    --status-good-bg: #DCFCE7;
+    --status-good-hover: #BBF7D0;
+    --status-bad-bg: #FEE2E2;
+
+    --chart-muted: #71717A;
+    --chart-grid: #E4E4E7;
+    --chart-text: #18181B;
+}
+
+/* ==========================================
+   THEME TOGGLE (header)
+========================================== */
+.site-header-actions {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: flex-end;
+    gap: 0.75rem;
+}
+
+.theme-toggle {
+    flex-shrink: 0;
+    width: 44px;
+    height: 26px;
+    padding: 0;
+    border: 1px solid var(--border-subtle);
+    border-radius: 999px;
+    background: var(--bg-surface);
+    cursor: pointer;
+    position: relative;
+    transition: border-color 0.2s ease, background-color 0.2s ease;
+}
+
+.theme-toggle:hover {
+    border-color: var(--border-hover);
+}
+
+.theme-toggle:focus-visible {
+    outline: 2px solid var(--accent-orange);
+    outline-offset: 2px;
+}
+
+.theme-toggle__thumb {
+    position: absolute;
+    top: 3px;
+    left: 3px;
+    width: 18px;
+    height: 18px;
+    border-radius: 50%;
+    background: var(--accent-orange);
+    transition: transform 0.2s ease;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.15);
+}
+
+[data-theme="light"] .theme-toggle__thumb {
+    transform: translateX(18px);
+}
+
+/* Saved / muted table rows (project builder) */
+.maker-row-saved {
+    background-color: var(--bg-row-muted);
+    opacity: 0.7;
 }
 
 /* ==========================================
@@ -112,8 +236,8 @@ tr:last-child td {
 }
 
 .btn-primary:hover {
-    background-color: #242424;
-    border-color: #3A3A3A;
+    background-color: var(--surface-hover);
+    border-color: var(--border-hover);
 }
 
 .btn-accent {
@@ -155,8 +279,8 @@ tr:last-child td {
 }
 
 .site-nav-link:hover {
-    background-color: #242424;
-    border-color: #3A3A3A;
+    background-color: var(--surface-hover);
+    border-color: var(--border-hover);
 }
 
 .site-nav-link--active {
@@ -170,40 +294,166 @@ tr:last-child td {
     color: var(--brand-brown);
 }
 
-/* Header wordmark — parent column must use shrink-0 in HTML so flex doesn’t crush the image */
+/* Financial model — secondary tabs (Tailwind-safe BEM) */
+.fm-subnav {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 0.5rem;
+    margin-bottom: 1.5rem;
+    padding-bottom: 1rem;
+    border-bottom: 1px solid var(--border-subtle);
+}
+
+.fm-subnav-link {
+    display: inline-block;
+    text-decoration: none;
+    background-color: var(--bg-surface);
+    color: var(--text-primary);
+    border: 1px solid var(--border-subtle);
+    padding: 6px 14px;
+    border-radius: 6px;
+    font-size: 0.8125rem;
+    font-weight: 500;
+    transition: background-color 0.2s ease, border-color 0.2s ease;
+}
+
+.fm-subnav-link:hover {
+    background-color: var(--surface-hover);
+    border-color: var(--border-hover);
+}
+
+.fm-subnav-link--active {
+    background-color: var(--surface-hover);
+    border-color: var(--accent-orange);
+    color: var(--text-primary);
+    box-shadow: inset 0 -2px 0 var(--accent-orange);
+}
+
+.fm-matrix-wrap {
+    overflow-x: auto;
+    max-width: 100%;
+}
+
+.fm-matrix {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 0.8125rem;
+}
+
+.fm-matrix th,
+.fm-matrix td {
+    padding: 0.5rem 0.75rem;
+    border-bottom: 1px solid var(--border-subtle);
+    white-space: nowrap;
+}
+
+.fm-matrix th {
+    text-align: right;
+    font-weight: 600;
+    color: var(--text-muted);
+    font-size: 0.65rem;
+    text-transform: uppercase;
+    letter-spacing: 0.06em;
+}
+
+.fm-matrix th.fm-matrix__label {
+    text-align: left;
+    position: sticky;
+    left: 0;
+    background: var(--bg-surface);
+    z-index: 1;
+    box-shadow: 1px 0 0 var(--border-subtle);
+}
+
+.fm-matrix td.fm-matrix__label {
+    text-align: left;
+    font-weight: 500;
+    color: var(--text-primary);
+    position: sticky;
+    left: 0;
+    background: var(--bg-surface);
+    z-index: 1;
+    box-shadow: 1px 0 0 var(--border-subtle);
+}
+
+.fm-matrix td {
+    text-align: right;
+    font-family: ui-monospace, monospace;
+    color: var(--text-primary);
+}
+
+body[data-nav="financial"] > div:first-child {
+    max-width: 80rem;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+/* Costs: override stale cached Tailwind shell/padding (loads after CDN). */
+body[data-nav="costs"] > div:first-child {
+    max-width: 72rem;
+    margin-left: auto;
+    margin-right: auto;
+}
+
+body[data-nav="costs"] .surface-card {
+    padding: 1.5rem;
+}
+
+/* App shell — one header style for every page (avoids Tailwind class drift between tabs) */
+.site-header {
+    margin-bottom: 2rem;
+    border-bottom: 1px solid var(--border-subtle);
+    padding-bottom: 1rem;
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-end;
+    flex-wrap: wrap;
+    gap: 1rem;
+}
+
+/* Header wordmark — parent column must use shrink-0 in HTML so flex doesn’t crush the brand */
 .site-brand {
     display: inline-flex;
-    flex-direction: column;
     align-items: flex-start;
-    gap: 0.5rem;
     flex-shrink: 0;
+    min-width: 0;
 }
 
-.site-brand-logoLink {
+/* Scoped to .site-header so Tailwind preflight / utilities can’t hide or restyle the logo on some pages */
+.site-header .site-brand-logoLink {
     display: inline-block;
-    line-height: 0;
+    line-height: 1;
     outline: none;
     flex-shrink: 0;
+    text-decoration: none !important;
+    color: var(--logo-wordmark-color) !important;
+    transition: color 0.2s ease, opacity 0.2s ease;
 }
 
-.site-brand-logoLink:focus-visible {
+.site-header .site-brand-logoLink:visited {
+    color: var(--logo-wordmark-color) !important;
+}
+
+.site-header .site-brand-logoLink:hover,
+.site-header .site-brand-logoLink:hover .site-logo-text {
+    color: var(--logo-wordmark-color-hover) !important;
+}
+
+.site-header .site-brand-logoLink:focus-visible {
     outline: 2px solid var(--accent-orange);
     outline-offset: 3px;
     border-radius: 4px;
 }
 
-.site-brand-tagline {
-    margin: 0;
-}
-
-.site-logo {
-    height: var(--logo-wordmark-height);
-    width: auto;
-    max-width: none;
+.site-header .site-brand .site-logo-text {
+    font-family: var(--font-brand) !important;
+    font-size: var(--logo-wordmark-size) !important;
+    font-weight: var(--logo-wordmark-weight) !important;
+    font-stretch: var(--logo-wordmark-stretch);
+    letter-spacing: var(--logo-wordmark-tracking) !important;
+    line-height: 1 !important;
     display: block;
-    object-fit: contain;
-    object-position: left center;
-    flex-shrink: 0;
+    color: var(--logo-wordmark-color) !important;
 }
 
 /* ==========================================
@@ -212,6 +462,10 @@ tr:last-child td {
 .modal-backdrop {
     background-color: rgba(0, 0, 0, 0.6);
     backdrop-filter: blur(4px); /* Sleek glass effect */
+}
+
+[data-theme="light"] .modal-backdrop {
+    background-color: rgba(24, 24, 27, 0.35);
 }
 
 .modal-surface {
@@ -236,4 +490,30 @@ input, select {
 
 input:focus, select:focus {
     border-color: var(--text-muted);
+}
+
+/* Settings page — in-page tabs (moved from inline HTML for consistency) */
+.settings-tab.tab-active {
+    color: var(--text-primary);
+    border-bottom-color: var(--accent-orange);
+}
+
+.settings-tab.tab-inactive {
+    color: var(--text-muted);
+    border-bottom-color: transparent;
+}
+
+.settings-tab.tab-inactive:hover {
+    color: var(--text-primary);
+}
+
+/* Dashboard — drag-and-drop tiles */
+.dashboard-tile--drop-target {
+    outline: 2px dashed var(--accent-orange);
+    outline-offset: 3px;
+    border-radius: 6px;
+}
+
+.dashboard-tile--dragging {
+    opacity: 0.65;
 }

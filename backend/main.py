@@ -1,17 +1,16 @@
 import os
-from contextlib import contextmanager
 from fastapi import FastAPI, HTTPException, Depends
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.staticfiles import StaticFiles
+from starlette.middleware.base import BaseHTTPMiddleware
+from starlette.requests import Request
 from pydantic import BaseModel
-from typing import Optional
+from typing import List, Optional, Any
 from datetime import date
-import psycopg2
-from psycopg2.extras import RealDictCursor
-from dotenv import load_dotenv
+from decimal import Decimal
 
-# Load Environment Variables
-load_dotenv()
+from db import get_db
+from integrations.router import register_integration_routes
 
 app = FastAPI()
 
@@ -24,21 +23,29 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# --- DATABASE CONNECTION DEPENDENCY ---
-def get_db():
-    """Yields a database connection and handles cleanup."""
-    conn = psycopg2.connect(
-        os.getenv("DATABASE_URL"), 
-        cursor_factory=RealDictCursor
-    )
-    try:
-        yield conn
-    finally:
-        conn.close()
+
+class NoCacheHtmlMiddleware(BaseHTTPMiddleware):
+    """Avoid stale nav/shell markup when editing static HTML (browser disk cache)."""
+
+    async def dispatch(self, request: Request, call_next):
+        response = await call_next(request)
+        ct = response.headers.get("content-type", "")
+        if any(
+            part in ct
+            for part in ("text/html", "text/css", "application/javascript", "text/javascript")
+        ):
+            response.headers["Cache-Control"] = "no-store, max-age=0, must-revalidate"
+            response.headers["Pragma"] = "no-cache"
+        return response
+
+
+app.add_middleware(NoCacheHtmlMiddleware)
+
+register_integration_routes(app)
 
 # --- PYDANTIC MODELS ---
 
-from typing import List
+from typing import List, Optional, Any
 
 class MoveCashflow(BaseModel):
     old_month: str  # e.g., "2026-05"
@@ -59,11 +66,30 @@ class ProjectBudgetWithTermsCreate(BaseModel):
 class MetricCreate(BaseModel):
     company_id: int
     month_date: date
-    mau: int
-    cac: float
-    churn_rate: float
-    ltv: float
-    revenue_per_employee: float
+    mau: int = 0
+    cac: float = 0.0
+    churn_rate: float = 0.0
+    ltv: float = 0.0
+    revenue_per_employee: float = 0.0
+    mrr: Optional[float] = None
+    expansion_mrr: Optional[float] = None
+    contraction_mrr: Optional[float] = None
+    churned_mrr: Optional[float] = None
+    starting_mrr: Optional[float] = None
+    new_customers: Optional[int] = None
+    sm_spend: Optional[float] = None
+    customers_start_of_month: Optional[int] = None
+    customers_lost: Optional[int] = None
+
+
+def _json_num(v: Any) -> Any:
+    if v is None:
+        return None
+    if isinstance(v, Decimal):
+        return float(v)
+    if isinstance(v, date):
+        return v.isoformat()
+    return v
 
 class ProjectCreate(BaseModel):
     company_id: int
@@ -457,79 +483,123 @@ def get_project_financials(project_id: int, conn=Depends(get_db)):
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
+
+def _runway_payload(company_id: int, cur) -> dict:
+    cur.execute(
+        """
+        SELECT total_cash
+        FROM cash_balances
+        WHERE company_id = %s
+        ORDER BY balance_date DESC
+        LIMIT 1
+        """,
+        (company_id,),
+    )
+    cash_row = cur.fetchone()
+    starting_cash = float(cash_row["total_cash"]) if cash_row and cash_row.get("total_cash") is not None else 0.0
+
+    cur.execute(
+        """
+        SELECT SUM(amount) as burn_rate
+        FROM fixed_expenses
+        WHERE company_id = %s
+        """,
+        (company_id,),
+    )
+    burn_row = cur.fetchone()
+    burn_rate = float(burn_row["burn_rate"]) if burn_row and burn_row.get("burn_rate") else 0.0
+
+    cur.execute(
+        """
+        SELECT SUM(contract_value * (probability / 100.0)) as expected_cash
+        FROM leads
+        WHERE company_id = %s
+        """,
+        (company_id,),
+    )
+    expected_row = cur.fetchone()
+    expected_cash = float(expected_row["expected_cash"]) if expected_row and expected_row.get("expected_cash") else 0.0
+
+    cur.execute(
+        """
+        SELECT SUM(amount) as total_capex
+        FROM one_off_expenses
+        WHERE company_id = %s
+        """,
+        (company_id,),
+    )
+    capex_row = cur.fetchone()
+    capex = float(capex_row["total_capex"]) if capex_row and capex_row.get("total_capex") else 0.0
+
+    gross_burn = burn_rate
+    cur.execute(
+        """
+        SELECT revenue FROM view_financial_health
+        WHERE company_id = %s
+        ORDER BY forecast_month DESC
+        LIMIT 1
+        """,
+        (company_id,),
+    )
+    rev_row = cur.fetchone()
+    latest_month_revenue = float(rev_row["revenue"]) if rev_row and rev_row.get("revenue") is not None else 0.0
+    net_burn = gross_burn - latest_month_revenue
+
+    runway_pipeline_adjusted = None
+    runway_net_burn_months = None
+    if burn_rate == 0:
+        runway_pipeline_adjusted = None
+        status_message = "Infinite runway - no expenses logged"
+        status_color = "Green"
+    else:
+        runway_pipeline_adjusted = (starting_cash + expected_cash - capex) / burn_rate
+        status_message = f"{runway_pipeline_adjusted:.1f} months"
+        if runway_pipeline_adjusted >= 6:
+            status_color = "Green"
+        elif runway_pipeline_adjusted >= 3:
+            status_color = "Yellow"
+        else:
+            status_color = "Red"
+
+    if net_burn is not None and net_burn > 0:
+        runway_net_burn_months = starting_cash / net_burn
+    elif net_burn is not None and net_burn <= 0:
+        runway_net_burn_months = None
+
+    return {
+        "company_id": company_id,
+        "starting_cash": starting_cash,
+        "burn_rate": burn_rate,
+        "gross_burn": gross_burn,
+        "latest_month_revenue": latest_month_revenue,
+        "net_burn": net_burn,
+        "expected_cash": expected_cash,
+        "capex": capex,
+        "estimated_months_left": runway_pipeline_adjusted,
+        "runway_net_burn_months": runway_net_burn_months,
+        "status_message": status_message if burn_rate != 0 else "Infinite runway - no expenses logged",
+        "status_color": status_color if burn_rate != 0 else "Green",
+        "runway_definition_note": "Pipeline-adjusted uses (cash + weighted pipeline − total one-off CAPEX) / fixed monthly burn. Net-burn runway uses cash / (gross burn − latest forecast month revenue).",
+    }
+
+
 # --- 5. SOLVENCY ENGINE (PREDICTIVE LOGIC) ---
 
 @app.get("/api/runway/{company_id}")
 def get_runway(company_id: int, conn=Depends(get_db)):
     try:
         with conn.cursor() as cur:
-            # 1. Get Starting Cash (most recent snapshot)
-            cur.execute("""
-                SELECT total_cash 
-                FROM cash_balances 
-                WHERE company_id = %s 
-                ORDER BY balance_date DESC 
-                LIMIT 1
-            """, (company_id,))
-            cash_row = cur.fetchone()
-            starting_cash = float(cash_row['total_cash']) if cash_row else 0.0
-
-            # 2. Calculate Burn Rate (Sum of fixed expenses)
-            cur.execute("""
-                SELECT SUM(amount) as burn_rate 
-                FROM fixed_expenses 
-                WHERE company_id = %s
-            """, (company_id,))
-            burn_row = cur.fetchone()
-            burn_rate = float(burn_row['burn_rate']) if burn_row and burn_row['burn_rate'] else 0.0
-
-            # 3. Calculate Expected Cash from Pipeline (Weighted Value)
-            cur.execute("""
-                SELECT SUM(contract_value * (probability / 100.0)) as expected_cash 
-                FROM leads 
-                WHERE company_id = %s
-            """, (company_id,))
-            expected_row = cur.fetchone()
-            expected_cash = float(expected_row['expected_cash']) if expected_row and expected_row['expected_cash'] else 0.0
-
-            # 4. Calculate CAPEX (Sum of one-off expenses)
-            cur.execute("""
-                SELECT SUM(amount) as total_capex 
-                FROM one_off_expenses 
-                WHERE company_id = %s
-            """, (company_id,))
-            capex_row = cur.fetchone()
-            capex = float(capex_row['total_capex']) if capex_row and capex_row['total_capex'] else 0.0
-
-            # 5. The Math: Calculate Runway
-            if burn_rate == 0:
-                estimated_months_left = None
-                status_message = "Infinite runway - no expenses logged"
-                status_color = "Green"
-            else:
-                estimated_months_left = (starting_cash + expected_cash - capex) / burn_rate
-                status_message = f"{estimated_months_left:.1f} months"
-                
-                # Determine Health Status Color
-                if estimated_months_left >= 6:
-                    status_color = "Green"
-                elif estimated_months_left >= 3:
-                    status_color = "Yellow"
-                else:
-                    status_color = "Red"
-
-            # Return the complete JSON payload
-            return {
-                "company_id": company_id,
-                "starting_cash": starting_cash,
-                "burn_rate": burn_rate,
-                "expected_cash": expected_cash,
-                "capex": capex,
-                "estimated_months_left": estimated_months_left,
-                "status_message": status_message,
-                "status_color": status_color
-            }
-            
+            payload = _runway_payload(company_id, cur)
+        return {
+            "company_id": payload["company_id"],
+            "starting_cash": payload["starting_cash"],
+            "burn_rate": payload["burn_rate"],
+            "expected_cash": payload["expected_cash"],
+            "capex": payload["capex"],
+            "estimated_months_left": payload["estimated_months_left"],
+            "status_message": payload["status_message"],
+            "status_color": payload["status_color"],
+        }
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -547,7 +617,9 @@ def get_latest_metrics(company_id: int, conn=Depends(get_db)):
                 LIMIT 1
             """, (company_id,))
             result = cur.fetchone()
-            return result if result else {} # Return empty dict if no data yet
+            if not result:
+                return {}
+            return {k: _json_num(v) for k, v in result.items()}
     except Exception as e:
         raise HTTPException(status_code=500, detail=str(e))
 
@@ -555,27 +627,370 @@ def get_latest_metrics(company_id: int, conn=Depends(get_db)):
 def add_metrics(item: MetricCreate, conn=Depends(get_db)):
     try:
         with conn.cursor() as cur:
-            # Insert, or update if that month already exists
-            cur.execute("""
-                INSERT INTO monthly_metrics (company_id, month_date, mau, cac, churn_rate, ltv, revenue_per_employee)
-                VALUES (%s, %s, %s, %s, %s, %s, %s)
-                ON CONFLICT (company_id, month_date) 
-                DO UPDATE SET 
-                    mau = EXCLUDED.mau, 
-                    cac = EXCLUDED.cac, 
-                    churn_rate = EXCLUDED.churn_rate, 
-                    ltv = EXCLUDED.ltv, 
-                    revenue_per_employee = EXCLUDED.revenue_per_employee
+            cur.execute(
+                """
+                INSERT INTO monthly_metrics (
+                    company_id, month_date, mau, cac, churn_rate, ltv, revenue_per_employee,
+                    mrr, expansion_mrr, contraction_mrr, churned_mrr, starting_mrr,
+                    new_customers, sm_spend, customers_start_of_month, customers_lost
+                )
+                VALUES (
+                    %s, %s, %s, %s, %s, %s, %s,
+                    %s, %s, %s, %s, %s,
+                    %s, %s, %s, %s
+                )
+                ON CONFLICT (company_id, month_date)
+                DO UPDATE SET
+                    mau = EXCLUDED.mau,
+                    cac = EXCLUDED.cac,
+                    churn_rate = EXCLUDED.churn_rate,
+                    ltv = EXCLUDED.ltv,
+                    revenue_per_employee = EXCLUDED.revenue_per_employee,
+                    mrr = EXCLUDED.mrr,
+                    expansion_mrr = EXCLUDED.expansion_mrr,
+                    contraction_mrr = EXCLUDED.contraction_mrr,
+                    churned_mrr = EXCLUDED.churned_mrr,
+                    starting_mrr = EXCLUDED.starting_mrr,
+                    new_customers = EXCLUDED.new_customers,
+                    sm_spend = EXCLUDED.sm_spend,
+                    customers_start_of_month = EXCLUDED.customers_start_of_month,
+                    customers_lost = EXCLUDED.customers_lost,
+                    updated_at = CURRENT_TIMESTAMP
                 RETURNING *
-            """, (item.company_id, item.month_date, item.mau, item.cac, item.churn_rate, item.ltv, item.revenue_per_employee))
+                """,
+                (
+                    item.company_id,
+                    item.month_date,
+                    item.mau,
+                    item.cac,
+                    item.churn_rate,
+                    item.ltv,
+                    item.revenue_per_employee,
+                    item.mrr,
+                    item.expansion_mrr,
+                    item.contraction_mrr,
+                    item.churned_mrr,
+                    item.starting_mrr,
+                    item.new_customers,
+                    item.sm_spend,
+                    item.customers_start_of_month,
+                    item.customers_lost,
+                ),
+            )
             result = cur.fetchone()
             conn.commit()
-            return result
+            return {k: _json_num(v) for k, v in result.items()}
     except Exception as e:
         conn.rollback()
         raise HTTPException(status_code=500, detail=str(e))
 
-# --- PYTHON ENDPOINT
+
+@app.get("/api/financial-model/pl/{company_id}")
+def financial_model_pl(company_id: int, conn=Depends(get_db)):
+    try:
+        with conn.cursor() as cur:
+            cur.execute(
+                """
+                SELECT * FROM view_financial_health
+                WHERE company_id = %s
+                ORDER BY forecast_month ASC
+                """,
+                (company_id,),
+            )
+            fh = cur.fetchall()
+            if not fh:
+                return {
+                    "columns": [],
+                    "rows": [],
+                    "by_product_month": [],
+                }
+
+            cols = [r["forecast_month"].isoformat() if hasattr(r["forecast_month"], "isoformat") else str(r["forecast_month"]) for r in fh]
+
+            def cells(key):
+                return [_json_num(r.get(key)) for r in fh]
+
+            dol_cells = []
+            for r in fh:
+                gp = float(r["gross_profit"] or 0)
+                np = float(r["net_profit"] or 0)
+                if np == 0:
+                    dol_cells.append(None)
+                else:
+                    dol_cells.append(round(gp / np, 4))
+
+            rev_cells = cells("revenue")
+            rule40_cells = []
+            for i, r in enumerate(fh):
+                yoy = None
+                if i >= 12:
+                    prev = float(fh[i - 12]["revenue"] or 0)
+                    curv = float(r["revenue"] or 0)
+                    if prev > 0:
+                        yoy = round(((curv - prev) / prev) * 100, 2)
+                ebitda_margin_proxy = None
+                npf = float(r["net_profit"] or 0)
+                revf = float(r["revenue"] or 0)
+                if revf > 0:
+                    ebitda_margin_proxy = round((npf / revf) * 100, 2)
+                if yoy is not None and ebitda_margin_proxy is not None:
+                    rule40_cells.append(round(yoy + ebitda_margin_proxy, 2))
+                else:
+                    rule40_cells.append(None)
+
+            rows_out = [
+                {"key": "revenue", "label": "Revenue", "cells": rev_cells},
+                {"key": "variable_costs", "label": "Variable costs (COGS)", "cells": cells("variable_costs")},
+                {"key": "contribution_margin", "label": "Contribution margin", "cells": cells("gross_profit")},
+                {"key": "fixed_costs", "label": "Fixed costs (monthly)", "cells": cells("fixed_costs")},
+                {"key": "net_profit", "label": "Net profit (operating-style)", "cells": cells("net_profit")},
+                {"key": "gross_margin_percent", "label": "Gross margin %", "cells": cells("gross_margin_percent")},
+                {"key": "dol", "label": "DOL (CM / net profit, approximate)", "cells": dol_cells},
+                {"key": "rule_of_40", "label": "Rule of 40 (YoY rev % + net margin % proxy)", "cells": rule40_cells},
+            ]
+
+            cur.execute(
+                """
+                SELECT
+                    product_name,
+                    forecast_month,
+                    units_forecasted,
+                    final_price,
+                    final_cogs,
+                    (final_price - final_cogs) AS cm_per_unit,
+                    CASE
+                        WHEN final_price > 0 THEN ROUND(((final_price - final_cogs) / final_price) * 100.0, 2)
+                        ELSE NULL
+                    END AS cm_ratio_percent
+                FROM view_forecast_details
+                WHERE company_id = %s
+                ORDER BY forecast_month ASC, product_name ASC
+                """,
+                (company_id,),
+            )
+            bpm = cur.fetchall()
+            by_product = []
+            for r in bpm:
+                by_product.append(
+                    {
+                        "product_name": r["product_name"],
+                        "forecast_month": r["forecast_month"].isoformat()
+                        if hasattr(r["forecast_month"], "isoformat")
+                        else str(r["forecast_month"]),
+                        "units_forecasted": r["units_forecasted"],
+                        "final_price": _json_num(r["final_price"]),
+                        "final_cogs": _json_num(r["final_cogs"]),
+                        "cm_per_unit": _json_num(r["cm_per_unit"]),
+                        "cm_ratio_percent": _json_num(r["cm_ratio_percent"]),
+                    }
+                )
+
+            return {"columns": cols, "rows": rows_out, "by_product_month": by_product}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/api/financial-model/cashflow/{company_id}")
+def financial_model_cashflow(company_id: int, conn=Depends(get_db)):
+    try:
+        with conn.cursor() as cur:
+            cur.execute(
+                """
+                SELECT forecast_month, revenue, net_profit
+                FROM view_financial_health
+                WHERE company_id = %s
+                ORDER BY forecast_month ASC
+                """,
+                (company_id,),
+            )
+            fh = cur.fetchall()
+
+            cur.execute(
+                """
+                SELECT DATE_TRUNC('month', expense_date)::DATE AS m, SUM(amount) AS capex
+                FROM one_off_expenses
+                WHERE company_id = %s
+                GROUP BY 1
+                ORDER BY 1 ASC
+                """,
+                (company_id,),
+            )
+            capex_rows = {r["m"].isoformat() if hasattr(r["m"], "isoformat") else str(r["m"]): float(r["capex"] or 0) for r in cur.fetchall()}
+
+            cols = []
+            op_proxy = []
+            capex_cells = []
+            net_cf_proxy = []
+            for r in fh:
+                key = r["forecast_month"].isoformat() if hasattr(r["forecast_month"], "isoformat") else str(r["forecast_month"])
+                cols.append(key)
+                npv = float(r["net_profit"] or 0)
+                op_proxy.append(npv)
+                cx = capex_rows.get(key, 0.0)
+                capex_cells.append(cx)
+                net_cf_proxy.append(npv - cx)
+
+            runway = _runway_payload(company_id, cur)
+
+            rows_out = [
+                {
+                    "key": "operating_cash_proxy",
+                    "label": "Operating cash proxy (net profit accrual)",
+                    "cells": op_proxy,
+                },
+                {"key": "capex", "label": "CAPEX (one-off expenses in month)", "cells": capex_cells},
+                {
+                    "key": "net_cash_flow_proxy",
+                    "label": "Net cash movement proxy (operating − CAPEX)",
+                    "cells": net_cf_proxy,
+                },
+            ]
+
+            return {"columns": cols, "rows": rows_out, "runway": runway}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/api/financial-model/balance-sheet/{company_id}")
+def financial_model_balance_sheet(company_id: int, conn=Depends(get_db)):
+    try:
+        with conn.cursor() as cur:
+            cur.execute(
+                """
+                SELECT balance_date, total_cash
+                FROM cash_balances
+                WHERE company_id = %s
+                ORDER BY balance_date DESC
+                LIMIT 1
+                """,
+                (company_id,),
+            )
+            cash_row = cur.fetchone()
+            as_of = cash_row["balance_date"].isoformat() if cash_row and cash_row.get("balance_date") else None
+            cash_amt = _json_num(cash_row["total_cash"]) if cash_row else None
+
+            lines = [
+                {"section": "assets", "key": "cash", "label": "Cash and cash equivalents", "amount": cash_amt},
+                {"section": "assets", "key": "receivables", "label": "Accounts receivable", "amount": None, "note": "Connect Xero / accounting sync"},
+                {"section": "assets", "key": "inventory", "label": "Inventory", "amount": None, "note": "Connect Xero / accounting sync"},
+                {"section": "assets", "key": "other_current_assets", "label": "Other current assets", "amount": None},
+                {"section": "assets", "key": "non_current_assets", "label": "Non-current assets", "amount": None},
+                {"section": "liabilities", "key": "payables", "label": "Accounts payable", "amount": None, "note": "Connect Xero / accounting sync"},
+                {"section": "liabilities", "key": "current_liabilities", "label": "Other current liabilities", "amount": None},
+                {"section": "liabilities", "key": "non_current_liabilities", "label": "Non-current liabilities", "amount": None},
+                {"section": "equity", "key": "equity", "label": "Equity (plug)", "amount": None},
+            ]
+
+            ratios = {
+                "net_working_capital": None,
+                "current_ratio": None,
+                "quick_ratio": None,
+                "asset_turnover": None,
+                "roa": None,
+                "note": "Ratios require full balance sheet lines from accounting integration.",
+            }
+
+            return {"as_of": as_of, "lines": lines, "ratios": ratios}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
+
+
+@app.get("/api/financial-model/kpis/{company_id}")
+def financial_model_kpis(company_id: int, conn=Depends(get_db)):
+    try:
+        with conn.cursor() as cur:
+            cur.execute(
+                """
+                SELECT * FROM monthly_metrics
+                WHERE company_id = %s
+                ORDER BY month_date DESC
+                LIMIT 1
+                """,
+                (company_id,),
+            )
+            m = cur.fetchone()
+            raw_metrics = {k: _json_num(v) for k, v in m.items()} if m else {}
+
+            cur.execute(
+                """
+                SELECT gross_margin_percent, revenue, net_profit
+                FROM view_financial_health
+                WHERE company_id = %s
+                ORDER BY forecast_month DESC
+                LIMIT 1
+                """,
+                (company_id,),
+            )
+            latest_pl = cur.fetchone()
+
+            gm_pct = float(latest_pl["gross_margin_percent"]) if latest_pl and latest_pl.get("gross_margin_percent") is not None else None
+            mrr = raw_metrics.get("mrr")
+            arr = (mrr * 12) if mrr is not None else None
+
+            nrr = None
+            if (
+                raw_metrics.get("starting_mrr") is not None
+                and float(raw_metrics["starting_mrr"]) > 0
+            ):
+                sm = float(raw_metrics["starting_mrr"])
+                exp = float(raw_metrics.get("expansion_mrr") or 0)
+                con = float(raw_metrics.get("contraction_mrr") or 0)
+                chm = float(raw_metrics.get("churned_mrr") or 0)
+                nrr = round(((sm + exp - chm - con) / sm) * 100, 2)
+
+            cac_computed = None
+            if raw_metrics.get("sm_spend") is not None and raw_metrics.get("new_customers"):
+                nc = int(raw_metrics["new_customers"])
+                if nc > 0:
+                    cac_computed = round(float(raw_metrics["sm_spend"]) / nc, 2)
+
+            cac_for_ratio = cac_computed
+            if cac_for_ratio is None and raw_metrics.get("cac"):
+                try:
+                    cac_for_ratio = float(raw_metrics["cac"])
+                except (TypeError, ValueError):
+                    cac_for_ratio = None
+
+            ltv_cac = None
+            if raw_metrics.get("ltv") is not None and cac_for_ratio and cac_for_ratio > 0:
+                ltv_cac = round(float(raw_metrics["ltv"]) / cac_for_ratio, 2)
+
+            cac_payback_months = None
+            payback_cac = cac_computed
+            if payback_cac is None and raw_metrics.get("cac"):
+                try:
+                    payback_cac = float(raw_metrics["cac"])
+                except (TypeError, ValueError):
+                    payback_cac = None
+            if payback_cac and payback_cac > 0 and mrr is not None and gm_pct is not None:
+                monthly_rev_per_customer = float(mrr)
+                margin_f = gm_pct / 100.0
+                denom = monthly_rev_per_customer * margin_f
+                if denom > 0:
+                    cac_payback_months = round(payback_cac / denom, 2)
+
+            monthly_churn_pct = None
+            if raw_metrics.get("customers_start_of_month") and int(raw_metrics["customers_start_of_month"]) > 0:
+                lost = int(raw_metrics.get("customers_lost") or 0)
+                monthly_churn_pct = round((lost / int(raw_metrics["customers_start_of_month"])) * 100, 4)
+
+            computed = {
+                "mrr": mrr,
+                "arr": arr,
+                "nrr_percent": nrr,
+                "cac_from_inputs": cac_computed,
+                "cac_stored": raw_metrics.get("cac"),
+                "ltv_cac_ratio": ltv_cac,
+                "cac_payback_months": cac_payback_months,
+                "monthly_churn_percent": monthly_churn_pct,
+                "churn_rate_stored": raw_metrics.get("churn_rate"),
+                "ltv_stored": raw_metrics.get("ltv"),
+                "latest_forecast_gross_margin_percent": _json_num(latest_pl["gross_margin_percent"]) if latest_pl else None,
+            }
+
+            return {"metrics_row": raw_metrics, "computed": computed}
+    except Exception as e:
+        raise HTTPException(status_code=500, detail=str(e))
 
 @app.get("/api/projects/list/{company_id}")
 def get_projects(company_id: int, conn=Depends(get_db)):

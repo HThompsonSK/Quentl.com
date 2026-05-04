@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Key metrics - Marmalade</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="global.css">
+    <script src="theme.js"></script>
+</head>
+<body class="p-10 font-sans min-h-screen" data-nav="metrics">
+    <div class="max-w-6xl mx-auto">
+        <header class="site-header">
+            <div class="shrink-0">
+                <div class="site-brand">
+                    <a href="index.html" class="site-brand-logoLink" aria-label="Marmalade home">
+                        <span class="site-logo-text">Marmalade</span>
+                    </a>
+                </div>
+            </div>
+            <div class="site-header-actions">
+            <nav id="site-nav" class="site-nav" aria-label="Main"></nav>
+            <button type="button" class="theme-toggle" data-theme-toggle aria-label="Toggle color scheme" title="Light / dark mode">
+                <span class="theme-toggle__thumb" aria-hidden="true"></span>
+            </button>
+            </div>
+        </header>
+        <script src="site-nav.js"></script>
+
+        <div class="mb-8">
+            <h2 class="text-2xl font-bold tracking-tight text-[var(--text-primary)]">Key metrics</h2>
+            <p class="text-[var(--text-muted)] text-sm mt-1">Runway, P&amp;L matrices, cashflow proxies, and SaaS KPIs with formulas now live under <a href="financial-model.html#pl" class="text-[var(--accent-orange)] hover:underline font-medium">Financial model</a>. This page shows raw <code class="text-xs font-mono">monthly_metrics</code> inputs and optional metric glossaries.</p>
+            <p class="text-sm mt-3">
+                <a href="financial-model.html#cash" class="text-[var(--accent-orange)] hover:underline font-medium">Cashflow &amp; runway</a>
+                <span class="text-[var(--text-muted)] mx-2">·</span>
+                <a href="financial-model.html#saas" class="text-[var(--accent-orange)] hover:underline font-medium">Unit economics &amp; SaaS</a>
+            </p>
+        </div>
+
+        <div class="surface-card p-6 mb-8 border-t-2 border-t-[var(--accent-orange)]">
+            <h3 class="text-xs font-semibold text-[var(--text-muted)] uppercase tracking-widest mb-4 border-b border-[var(--border-subtle)] pb-2">Latest monthly_metrics (API)</h3>
+            <div id="api-metrics" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 text-sm font-mono"></div>
+        </div>
+
+        <div class="mb-4 flex flex-wrap gap-4 items-center">
+            <span class="text-xs font-semibold text-[var(--text-muted)] uppercase tracking-widest">Show glossaries</span>
+            <label class="inline-flex items-center gap-2 text-sm text-[var(--text-primary)]"><input type="checkbox" class="group-toggle" data-group="marketplace" checked> Marketplace</label>
+            <label class="inline-flex items-center gap-2 text-sm text-[var(--text-primary)]"><input type="checkbox" class="group-toggle" data-group="ecom" checked> Ecommerce</label>
+        </div>
+
+        <div id="metric-panels" class="space-y-8"></div>
+    </div>
+
+    <script>
+        var METRIC_DEFS = {
+            marketplace: [
+                { id: 'gmv', label: 'GMV', text: 'Gross merchandise value — total sales through the platform.' },
+                { id: 'take', label: 'Take rate', text: 'Platform fee as a percentage of GMV.' },
+                { id: 'liq', label: 'Liquidity', text: 'How well supply meets demand (e.g. fill rate, time to match).' },
+                { id: 'ret_m', label: 'Retention', text: 'Repeat usage from buyers or sellers.' }
+            ],
+            ecom: [
+                { id: 'conv', label: 'Conversion rate', text: 'Visitors who purchase.' },
+                { id: 'aov', label: 'Average order value', text: 'Revenue divided by orders.' },
+                { id: 'repeat', label: 'Repeat purchase rate', text: 'Customers who buy again in a window.' }
+            ]
+        };
+
+        var TOGGLE_KEY = 'marmalade_metric_toggles_v2';
+
+        function loadToggles() {
+            try {
+                var raw = localStorage.getItem(TOGGLE_KEY);
+                if (!raw) return { marketplace: true, ecom: true };
+                return JSON.parse(raw);
+            } catch (e) {
+                return { marketplace: true, ecom: true };
+            }
+        }
+
+        function saveToggles(t) {
+            localStorage.setItem(TOGGLE_KEY, JSON.stringify(t));
+        }
+
+        function renderPanels() {
+            var t = loadToggles();
+            document.querySelectorAll('.group-toggle').forEach(function (cb) {
+                var g = cb.getAttribute('data-group');
+                cb.checked = t[g] !== false;
+            });
+
+            var host = document.getElementById('metric-panels');
+            host.innerHTML = '';
+
+            ['marketplace', 'ecom'].forEach(function (group) {
+                if (!t[group]) return;
+                var title = { marketplace: 'Marketplace', ecom: 'Ecommerce' }[group];
+                var section = document.createElement('div');
+                section.className = 'surface-card p-6 border-t-2 border-t-[var(--border-subtle)]';
+                var inner = '<h3 class="text-xs font-semibold text-[var(--text-muted)] uppercase tracking-widest mb-4 border-b border-[var(--border-subtle)] pb-2">' + title + '</h3><dl class="space-y-4">';
+                METRIC_DEFS[group].forEach(function (m) {
+                    inner += '<div class="flex flex-col sm:flex-row sm:justify-between sm:gap-4 border-b border-[var(--border-subtle)] pb-3 last:border-0">' +
+                        '<dt class="font-medium text-[var(--text-primary)]">' + m.label + '</dt>' +
+                        '<dd class="text-sm text-[var(--text-muted)] max-w-xl">' + m.text + '</dd></div>';
+                });
+                inner += '</dl>';
+                section.innerHTML = inner;
+                host.appendChild(section);
+            });
+        }
+
+        document.querySelectorAll('.group-toggle').forEach(function (cb) {
+            cb.addEventListener('change', function () {
+                var t = loadToggles();
+                t[cb.getAttribute('data-group')] = cb.checked;
+                saveToggles(t);
+                renderPanels();
+            });
+        });
+
+        async function loadApiMetrics() {
+            try {
+                var res = await fetch('/api/metrics/1');
+                var m = await res.json();
+                var el = document.getElementById('api-metrics');
+                if (!m || Object.keys(m).length === 0) {
+                    el.innerHTML = '<p class="text-[var(--text-muted)] col-span-full">No monthly_metrics row yet. POST /api/metrics with optional MRR, NRR inputs, S&amp;M spend, new customers, etc.</p>';
+                    return;
+                }
+                var skip = { id: true, company_id: true, created_at: true, updated_at: true };
+                var rows = [];
+                for (var k in m) {
+                    if (skip[k] || m[k] == null) continue;
+                    rows.push('<div class="surface-card p-3 border border-[var(--border-subtle)]"><span class="text-[10px] text-[var(--text-muted)] uppercase">' + k + '</span><div class="font-mono text-[var(--text-primary)]">' + m[k] + '</div></div>');
+                }
+                el.innerHTML = rows.join('') || '<p class="text-[var(--text-muted)]">Empty.</p>';
+            } catch (e) {
+                console.error(e);
+            }
+        }
+
+        renderPanels();
+        loadApiMetrics();
+    </script>
+</body>
+</html>

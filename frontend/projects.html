@@ -2,36 +2,74 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <title>Project CAPEX - Founder OS</title>
-    <link rel="stylesheet" href="global.css">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cashflow generator - Marmalade</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="global.css">
+    <script src="theme.js"></script>
 </head>
-<body class="p-10 font-sans min-h-screen">
+<body class="p-10 font-sans min-h-screen" data-nav="cashflow">
     <div class="max-w-6xl mx-auto">
         
-        <header class="mb-8 border-b border-[var(--border-subtle)] pb-4 flex justify-between items-center flex-wrap gap-4">
+        <header class="site-header">
             <div class="shrink-0">
                 <div class="site-brand">
                     <a href="index.html" class="site-brand-logoLink" aria-label="Marmalade home">
-                        <img src="assets/marmalade-logo.png" alt="Marmalade" class="site-logo" width="512" height="288" />
+                        <span class="site-logo-text">Marmalade</span>
                     </a>
-                    <p class="site-brand-tagline text-[var(--text-muted)] text-sm">Click any month to view details</p>
                 </div>
             </div>
-            <nav class="site-nav" aria-label="Main">
-                <a href="index.html" class="site-nav-link">Dashboard</a>
-                <a href="pipeline.html" class="site-nav-link">Pipeline</a>
-                <a href="analytics.html" class="site-nav-link">Analytics</a>
-                <a href="forecast.html" class="site-nav-link">Plan Sales</a>
-                <a href="founder.html" class="site-nav-link">Founder Matrix</a>
-                <a href="projects.html" class="site-nav-link site-nav-link--active">Project Builder</a>
-                <a href="settings.html" class="site-nav-link">Settings</a>
-            </nav>
+            <div class="site-header-actions">
+            <nav id="site-nav" class="site-nav" aria-label="Main"></nav>
+            <button type="button" class="theme-toggle" data-theme-toggle aria-label="Toggle color scheme" title="Light / dark mode">
+                <span class="theme-toggle__thumb" aria-hidden="true"></span>
+            </button>
+            </div>
         </header>
+        <script src="site-nav.js"></script>
 
         <div class="mb-8">
-            <h2 class="text-2xl font-bold tracking-tight text-[var(--text-primary)]">Project Builder</h2>
-            <p class="text-[var(--text-muted)] text-sm mt-1">CAPEX projects, budgets, and cashflow timelines.</p>
+            <h2 class="text-2xl font-bold tracking-tight text-[var(--text-primary)]">Cashflow generator</h2>
+            <p class="text-[var(--text-muted)] text-sm mt-1">Liquidity, CAPEX projects, and installment timelines. Product sales flow from <a href="forecast.html" class="text-[var(--accent-orange)] hover:underline font-medium">unit forecasts</a>; deals from <a href="sales-planner.html" class="text-[var(--accent-orange)] hover:underline font-medium">Sales planner</a> feed runway. See <a href="financial-model.html#cash" class="text-[var(--accent-orange)] hover:underline font-medium">Financial model → Cashflow</a> for runway definitions and monthly cash proxies.</p>
+        </div>
+
+        <div id="liquidity" class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+            <div class="surface-card p-6 border-t-2 border-t-[var(--runway-green)]">
+                <h3 class="text-xs font-semibold text-[var(--text-muted)] uppercase tracking-widest mb-4 border-b border-[var(--border-subtle)] pb-2">Cash in bank</h3>
+                <p class="text-sm text-[var(--text-muted)] mb-4">Latest snapshot used for runway and solvency.</p>
+                <form id="cashForm" class="space-y-4">
+                    <input type="hidden" name="company_id" value="1">
+                    <div>
+                        <label class="block text-[10px] font-semibold text-[var(--text-muted)] uppercase tracking-widest mb-2">Snapshot date</label>
+                        <input type="date" name="balance_date" class="w-full font-mono" required>
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-semibold text-[var(--text-muted)] uppercase tracking-widest mb-2">Total cash (£)</label>
+                        <input type="number" step="0.01" name="total_cash" placeholder="50000" class="w-full font-mono" required>
+                    </div>
+                    <button type="submit" class="btn-accent w-full">Update cash balance</button>
+                </form>
+            </div>
+            <div class="surface-card p-6 border-t-2 border-t-[var(--death-red)]">
+                <h3 class="text-xs font-semibold text-[var(--text-muted)] uppercase tracking-widest mb-4 border-b border-[var(--border-subtle)] pb-2">One-off expense (CAPEX)</h3>
+                <p class="text-sm text-[var(--text-muted)] mb-4">Equipment, legal, setup — included in runway math.</p>
+                <form id="capexForm" class="space-y-4">
+                    <input type="hidden" name="company_id" value="1">
+                    <div>
+                        <label class="block text-[10px] font-semibold text-[var(--text-muted)] uppercase tracking-widest mb-2">Name</label>
+                        <input type="text" name="name" placeholder="e.g. Laptops" class="w-full font-mono" required>
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-semibold text-[var(--text-muted)] uppercase tracking-widest mb-2">Amount (£)</label>
+                        <input type="number" step="0.01" name="amount" class="w-full font-mono" required>
+                    </div>
+                    <div>
+                        <label class="block text-[10px] font-semibold text-[var(--text-muted)] uppercase tracking-widest mb-2">Date</label>
+                        <input type="date" name="expense_date" class="w-full font-mono" required>
+                    </div>
+                    <button type="submit" class="btn-primary w-full">Add one-off expense</button>
+                </form>
+            </div>
         </div>
 
         <div id="view-list">
@@ -121,7 +159,7 @@
                             </tbody>
                     </table>
                     
-                    <div class="p-3 border-t border-[var(--border-subtle)] hover:bg-[#222] transition cursor-pointer text-center" onclick="addMakerRow()">
+                    <div class="p-3 border-t border-[var(--border-subtle)] hover:bg-[var(--row-hover)] transition cursor-pointer text-center" onclick="addMakerRow()">
                         <span class="text-[var(--text-muted)] hover:text-[var(--text-primary)] font-mono text-xs">+ Add Cost</span>
                     </div>
                 </div>
@@ -295,7 +333,7 @@
 
         function renderExistingMakerRow(item) {
             const tr = document.createElement('tr');
-            tr.className = "bg-[#111] opacity-70";
+            tr.className = "maker-row-saved";
             tr.innerHTML = `
                 <td>${item.item_name}</td>
                 <td>${item.supplier || '-'}</td>
@@ -399,8 +437,8 @@
 
         async function submitBatchCashflow() {
             if(!currentProjectId) return;
-            // Ignore already saved rows (.bg-[#111]) to prevent duplication!
-            const rows = document.getElementById('maker-tbody').querySelectorAll('tr:not(.bg-\\[\\#111\\])');
+            // Ignore already saved rows (.maker-row-saved) to prevent duplication!
+            const rows = document.getElementById('maker-tbody').querySelectorAll('tr:not(.maker-row-saved)');
             
             let successCount = 0;
             for(let row of rows) {
@@ -486,7 +524,7 @@
                 timelineMonths.forEach(m => {
                     let isFilled = sums[m] > 0;
                     let amt = isFilled ? `£${sums[m].toLocaleString()}` : '-';
-                    let styling = isFilled ? 'bg-[#1a2b22] text-[var(--runway-green)] cursor-grab hover:bg-[#20362b]' : 'text-[var(--text-muted)] hover:bg-[#222]';
+                    let styling = isFilled ? 'bg-[var(--status-good-bg)] text-[var(--runway-green)] cursor-grab hover:bg-[var(--status-good-hover)]' : 'text-[var(--text-muted)] hover:bg-[var(--row-hover)]';
                     
                     html += `<td class="text-center border-l border-[var(--border-subtle)] font-mono text-xs transition ${styling}"
                         draggable="${isFilled}" ondragstart="drag(event, ${item.id}, '${m}')" ondrop="drop(event, ${item.id}, '${m}')" ondragover="allowDrop(event)" ondragleave="dragLeave(event)">${amt}</td>`;
@@ -519,6 +557,29 @@
                 }
             } catch (e) {}
         }
+
+        async function postLiquidityForm(e, endpoint, successMsg) {
+            e.preventDefault();
+            const data = Object.fromEntries(new FormData(e.target));
+            try {
+                const res = await fetch('/api/' + endpoint, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+                if (res.ok) {
+                    alert(successMsg);
+                    e.target.reset();
+                } else {
+                    alert('Could not save.');
+                }
+            } catch (err) {
+                console.error(err);
+                alert('Server error');
+            }
+        }
+        document.getElementById('cashForm').addEventListener('submit', (e) => postLiquidityForm(e, 'cash_balances', 'Cash balance updated.'));
+        document.getElementById('capexForm').addEventListener('submit', (e) => postLiquidityForm(e, 'one_off_expenses', 'One-off expense added.'));
 
         // Init
         loadProjects();
