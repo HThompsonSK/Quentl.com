@@ -11,6 +11,7 @@ from decimal import Decimal
 
 from db import get_db
 from integrations.router import register_integration_routes
+from onboarding_sketch import register_onboarding_sketch_routes
 
 app = FastAPI()
 
@@ -42,6 +43,7 @@ class NoCacheHtmlMiddleware(BaseHTTPMiddleware):
 app.add_middleware(NoCacheHtmlMiddleware)
 
 register_integration_routes(app)
+register_onboarding_sketch_routes(app)
 
 # --- PYDANTIC MODELS ---
 
