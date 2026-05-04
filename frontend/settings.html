@@ -4,185 +4,289 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Settings - Marmalade</title>
-    <link rel="stylesheet" href="global.css">
     <script src="https://cdn.tailwindcss.com"></script>
-    <style>
-        .settings-tab.tab-active {
-            color: var(--text-primary);
-            border-bottom-color: var(--accent-orange);
-        }
-        .settings-tab.tab-inactive {
-            color: var(--text-muted);
-            border-bottom-color: transparent;
-        }
-        .settings-tab.tab-inactive:hover {
-            color: var(--text-primary);
-        }
-    </style>
+    <link rel="stylesheet" href="global.css">
+    <script src="theme.js"></script>
 </head>
-<body class="p-10 font-sans min-h-screen">
+<body class="p-10 font-sans min-h-screen" data-nav="settings">
     <div class="max-w-6xl mx-auto">
-        <header class="mb-8 border-b border-[var(--border-subtle)] pb-4 flex justify-between items-center flex-wrap gap-4">
+        <header class="site-header">
             <div class="shrink-0">
                 <div class="site-brand">
                     <a href="index.html" class="site-brand-logoLink" aria-label="Marmalade home">
-                        <img src="assets/marmalade-logo.png" alt="Marmalade" class="site-logo" width="512" height="288" />
+                        <span class="site-logo-text">Marmalade</span>
                     </a>
-                    <p class="site-brand-tagline text-[var(--text-muted)] text-sm">Click any month to view details</p>
                 </div>
             </div>
-            <nav class="site-nav" aria-label="Main">
-                <a href="index.html" class="site-nav-link">Dashboard</a>
-                <a href="pipeline.html" class="site-nav-link">Pipeline</a>
-                <a href="analytics.html" class="site-nav-link">Analytics</a>
-                <a href="forecast.html" class="site-nav-link">Plan Sales</a>
-                <a href="founder.html" class="site-nav-link">Founder Matrix</a>
-                <a href="projects.html" class="site-nav-link">Project Builder</a>
-                <a href="settings.html" class="site-nav-link site-nav-link--active">Settings</a>
-            </nav>
+            <div class="site-header-actions">
+            <nav id="site-nav" class="site-nav" aria-label="Main"></nav>
+            <button type="button" class="theme-toggle" data-theme-toggle aria-label="Toggle color scheme" title="Light / dark mode">
+                <span class="theme-toggle__thumb" aria-hidden="true"></span>
+            </button>
+            </div>
         </header>
+        <script src="site-nav.js"></script>
 
         <div class="mb-8">
             <h2 class="text-2xl font-bold tracking-tight text-[var(--text-primary)]">Settings</h2>
-            <p class="text-[var(--text-muted)] text-sm mt-1">Catalog items and recurring monthly burn inputs.</p>
+            <p class="text-[var(--text-muted)] text-sm mt-1">Theme, global assumptions, and shortcuts to catalog and burn inputs.</p>
         </div>
 
-        <div class="max-w-3xl">
-            <div class="flex border-b border-[var(--border-subtle)] mb-6" role="tablist">
-                <button type="button" id="tab-btn-products" onclick="switchSettingsTab('products')" role="tab" aria-selected="true" aria-controls="panel-products"
-                    class="settings-tab px-6 py-3 text-sm font-medium border-b-2 transition tab-active">
-                    Product catalog
-                </button>
-                <button type="button" id="tab-btn-expenses" onclick="switchSettingsTab('expenses')" role="tab" aria-selected="false" aria-controls="panel-expenses"
-                    class="settings-tab px-6 py-3 text-sm font-medium border-b-2 transition tab-inactive">
-                    Recurring costs
-                </button>
+        <div class="surface-card p-6 border-t-2 border-t-[var(--accent-orange)] mb-8">
+            <h3 class="text-xs font-semibold text-[var(--text-muted)] uppercase tracking-widest mb-4 border-b border-[var(--border-subtle)] pb-2">Data entry</h3>
+            <ul class="space-y-2 text-sm text-[var(--text-primary)]">
+                <li><a href="products.html" class="text-[var(--accent-orange)] hover:underline font-medium">Products</a> — SKUs, price, COGS</li>
+                <li><a href="operating-costs.html" class="text-[var(--accent-orange)] hover:underline font-medium">Operating costs</a> — fixed monthly OPEX</li>
+            </ul>
+        </div>
+
+        <div class="surface-card p-6 border-t-2 border-t-[var(--accent-orange)] mb-8">
+            <h3 class="text-xs font-semibold text-[var(--text-muted)] uppercase tracking-widest mb-4 border-b border-[var(--border-subtle)] pb-2">Accounting connections</h3>
+            <p class="text-sm text-[var(--text-muted)] mb-4">Connect Xero or QuickBooks Online to pull <strong class="text-[var(--text-primary)] font-medium">accrual</strong> (invoice totals by invoice date) and <strong class="text-[var(--text-primary)] font-medium">cash</strong> (customer payments by payment date) into Marmalade. Configure client IDs and <code class="text-xs bg-[var(--surface-muted)] px-1 rounded">APP_BASE_URL</code> in server env; redirect URLs must match your OAuth apps.</p>
+            <p class="text-xs text-[var(--text-muted)] mb-4 font-mono opacity-90">Xero callback: <span id="xeroCbHint"></span><br>QuickBooks callback: <span id="qboCbHint"></span></p>
+            <div id="integrationStatus" class="text-sm text-[var(--text-muted)] mb-4">Loading connection status…</div>
+            <div class="flex flex-wrap gap-3 mb-4">
+                <a class="btn-accent text-sm py-2 px-4" href="/api/integrations/xero/start?company_id=1">Connect Xero</a>
+                <a class="btn-primary text-sm py-2 px-4" href="/api/integrations/quickbooks/start?company_id=1">Connect QuickBooks</a>
             </div>
-
-            <div id="panel-products" role="tabpanel" aria-labelledby="tab-btn-products">
-                <div class="surface-card p-8 border-t-2 border-t-[var(--accent-orange)]">
-                    <h3 class="text-xs font-semibold text-[var(--text-muted)] uppercase tracking-widest mb-2">Product catalog</h3>
-                    <p class="text-sm text-[var(--text-muted)] mb-6 border-b border-[var(--border-subtle)] pb-4">Define SKUs, pricing, and unit economics for forecasts.</p>
-                    <form id="productForm" class="space-y-6">
-                        <input type="hidden" name="company_id" value="1">
-
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <div>
-                                <label class="block text-[10px] font-semibold text-[var(--text-muted)] uppercase tracking-widest mb-2">Product name</label>
-                                <input type="text" name="name" placeholder="e.g. Apricot Jam" class="w-full font-mono" required>
-                            </div>
-                            <div>
-                                <label class="block text-[10px] font-semibold text-[var(--text-muted)] uppercase tracking-widest mb-2">SKU</label>
-                                <input type="text" name="sku" placeholder="e.g. JAM-002" class="w-full font-mono" required>
-                            </div>
-                        </div>
-
-                        <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                            <div>
-                                <label class="block text-[10px] font-semibold text-[var(--text-muted)] uppercase tracking-widest mb-2">Sales price (£)</label>
-                                <input type="number" step="0.01" name="price" placeholder="4.00" class="w-full font-mono" required>
-                            </div>
-                            <div>
-                                <label class="block text-[10px] font-semibold text-[var(--text-muted)] uppercase tracking-widest mb-2">Cost of goods (£)</label>
-                                <input type="number" step="0.01" name="cogs" placeholder="1.20" class="w-full font-mono" required>
-                            </div>
-                        </div>
-
-                        <button type="submit" class="btn-accent w-full">Save product</button>
-                    </form>
+            <div class="flex flex-wrap gap-3 mb-6">
+                <button type="button" id="syncXeroBtn" class="btn-primary text-sm py-2 px-4">Sync Xero now</button>
+                <button type="button" id="syncQboBtn" class="btn-primary text-sm py-2 px-4">Sync QuickBooks now</button>
+            </div>
+            <div class="border-t border-[var(--border-subtle)] pt-4">
+                <h4 class="text-[10px] font-semibold text-[var(--text-muted)] uppercase tracking-widest mb-2">Actuals legend</h4>
+                <ul id="actualsLegend" class="text-xs text-[var(--text-muted)] space-y-2 list-disc pl-4"></ul>
+            </div>
+            <div class="mt-4 overflow-x-auto">
+                <table class="w-full text-left text-xs border-collapse">
+                    <thead>
+                        <tr class="text-[var(--text-muted)] uppercase tracking-widest">
+                            <th class="py-2">Month</th>
+                            <th>Basis</th>
+                            <th class="text-right">Total</th>
+                        </tr>
+                    </thead>
+                    <tbody id="actualsSummaryBody"></tbody>
+                </table>
+            </div>
+            <div class="mt-6 border-t border-[var(--border-subtle)] pt-4">
+                <h4 class="text-[10px] font-semibold text-[var(--text-muted)] uppercase tracking-widest mb-2">Recent synced lines</h4>
+                <p class="text-xs text-[var(--text-muted)] mb-3">Link a row to a pipeline lead by ID (from <a href="sales-planner.html" class="text-[var(--accent-orange)] hover:underline">Sales planner</a> after adding the lead). Auto-linking: map a provider contact ID once below.</p>
+                <div class="overflow-x-auto max-h-56 overflow-y-auto border border-[var(--border-subtle)] rounded-lg">
+                    <table class="w-full text-left text-xs border-collapse">
+                        <thead class="sticky top-0 bg-[var(--surface-card)]">
+                            <tr class="text-[var(--text-muted)] uppercase tracking-widest">
+                                <th class="p-2">ID</th>
+                                <th class="p-2">Date</th>
+                                <th class="p-2">Basis</th>
+                                <th class="p-2 text-right">Amt</th>
+                                <th class="p-2">Contact</th>
+                                <th class="p-2">Lead</th>
+                            </tr>
+                        </thead>
+                        <tbody id="actualsLinesBody"></tbody>
+                    </table>
                 </div>
             </div>
-
-            <div id="panel-expenses" class="hidden" role="tabpanel" aria-labelledby="tab-btn-expenses">
-                <div class="surface-card p-8 border-t-2 border-t-[var(--accent-orange)]">
-                    <h3 class="text-xs font-semibold text-[var(--text-muted)] uppercase tracking-widest mb-2">Recurring costs</h3>
-                    <p class="text-sm text-[var(--text-muted)] mb-6 border-b border-[var(--border-subtle)] pb-4">Fixed monthly line items included in burn and break-even.</p>
-                    <form id="expenseForm" class="space-y-6">
-                        <input type="hidden" name="company_id" value="1">
-
-                        <div>
-                            <label class="block text-[10px] font-semibold text-[var(--text-muted)] uppercase tracking-widest mb-2">Line item</label>
-                            <input type="text" name="name" placeholder="e.g. Insurance" class="w-full font-mono" required>
-                        </div>
-
-                        <div>
-                            <label class="block text-[10px] font-semibold text-[var(--text-muted)] uppercase tracking-widest mb-2">Monthly amount (£)</label>
-                            <input type="number" step="0.01" name="amount" placeholder="50.00" class="w-full font-mono" required>
-                        </div>
-
-                        <button type="submit" class="btn-accent w-full">Save recurring cost</button>
-                    </form>
+            <div class="mt-6 grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div>
+                    <h4 class="text-[10px] font-semibold text-[var(--text-muted)] uppercase tracking-widest mb-2">Link line → lead</h4>
+                    <div class="flex flex-col gap-2">
+                        <input type="number" id="patchLineId" class="font-mono text-sm" placeholder="Line ID">
+                        <input type="number" id="patchLeadId" class="font-mono text-sm" placeholder="Lead ID (empty = unlink)">
+                        <button type="button" id="patchLineBtn" class="btn-primary text-sm py-2">Save link</button>
+                    </div>
+                </div>
+                <div>
+                    <h4 class="text-[10px] font-semibold text-[var(--text-muted)] uppercase tracking-widest mb-2">Map contact → lead (auto on sync)</h4>
+                    <div class="flex flex-col gap-2">
+                        <select id="mapProvider" class="font-mono text-sm">
+                            <option value="xero">xero</option>
+                            <option value="quickbooks">quickbooks</option>
+                        </select>
+                        <input type="text" id="mapContactId" class="font-mono text-sm" placeholder="External contact ID">
+                        <input type="number" id="mapLeadId" class="font-mono text-sm" placeholder="Lead ID">
+                        <button type="button" id="mapSaveBtn" class="btn-primary text-sm py-2">Save mapping</button>
+                    </div>
                 </div>
             </div>
+        </div>
+
+        <div class="surface-card p-6 border-t-2 border-t-[var(--border-subtle)]">
+            <h3 class="text-xs font-semibold text-[var(--text-muted)] uppercase tracking-widest mb-6 border-b border-[var(--border-subtle)] pb-2">Global assumptions</h3>
+            <p class="text-sm text-[var(--text-muted)] mb-6">Planning defaults (tax, discount rate, starting cash). Persisted in this browser until wired to the API.</p>
+
+            <form id="globalSettingsForm" class="space-y-6">
+                <div>
+                    <label class="block text-[10px] font-semibold text-[var(--text-muted)] uppercase tracking-widest mb-2">Corporate tax rate (%)</label>
+                    <input type="number" id="tax_rate" step="0.1" class="w-full font-mono" placeholder="e.g. 25">
+                </div>
+                <div>
+                    <label class="block text-[10px] font-semibold text-[var(--text-muted)] uppercase tracking-widest mb-2">Discount rate (%) <span class="text-[var(--text-muted)] opacity-70 lowercase normal-case text-xs ml-1">(NPV)</span></label>
+                    <input type="number" id="discount_rate" step="0.1" class="w-full font-mono" placeholder="e.g. 10">
+                </div>
+                <div>
+                    <label class="block text-[10px] font-semibold text-[var(--text-muted)] uppercase tracking-widest mb-2">Default starting cash (£)</label>
+                    <input type="number" id="starting_cash" class="w-full font-mono" placeholder="e.g. 50000">
+                </div>
+
+                <button type="button" id="saveGlobalBtn" class="btn-accent w-full py-3 mt-2">Save assumptions</button>
+            </form>
         </div>
     </div>
 
     <script>
-        function switchSettingsTab(which) {
-            const productsPanel = document.getElementById('panel-products');
-            const expensesPanel = document.getElementById('panel-expenses');
-            const btnProducts = document.getElementById('tab-btn-products');
-            const btnExpenses = document.getElementById('tab-btn-expenses');
+        var GLOBAL_KEY = 'marmalade_global_assumptions_v1';
 
-            const showProducts = which === 'products';
-
-            productsPanel.classList.toggle('hidden', !showProducts);
-            expensesPanel.classList.toggle('hidden', showProducts);
-
-            btnProducts.classList.toggle('tab-active', showProducts);
-            btnProducts.classList.toggle('tab-inactive', !showProducts);
-            btnExpenses.classList.toggle('tab-active', !showProducts);
-            btnExpenses.classList.toggle('tab-inactive', showProducts);
-
-            btnProducts.setAttribute('aria-selected', showProducts ? 'true' : 'false');
-            btnExpenses.setAttribute('aria-selected', showProducts ? 'false' : 'true');
+        function loadGlobal() {
+            try {
+                var raw = localStorage.getItem(GLOBAL_KEY);
+                if (!raw) return;
+                var o = JSON.parse(raw);
+                if (o.tax_rate != null) document.getElementById('tax_rate').value = o.tax_rate;
+                if (o.discount_rate != null) document.getElementById('discount_rate').value = o.discount_rate;
+                if (o.starting_cash != null) document.getElementById('starting_cash').value = o.starting_cash;
+            } catch (e) {}
         }
 
-        document.getElementById('productForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const formData = new FormData(e.target);
-            const data = Object.fromEntries(formData.entries());
-
-            try {
-                const res = await fetch('/api/products', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(data)
-                });
-                if (res.ok) {
-                    alert('Product saved.');
-                    e.target.reset();
-                } else {
-                    alert('Could not save product.');
-                }
-            } catch (err) {
-                console.error(err);
-                alert('Error connecting to server.');
-            }
+        document.getElementById('saveGlobalBtn').addEventListener('click', function () {
+            var o = {
+                tax_rate: document.getElementById('tax_rate').value,
+                discount_rate: document.getElementById('discount_rate').value,
+                starting_cash: document.getElementById('starting_cash').value
+            };
+            localStorage.setItem(GLOBAL_KEY, JSON.stringify(o));
+            alert('Assumptions saved locally.');
         });
 
-        document.getElementById('expenseForm').addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const formData = new FormData(e.target);
-            const data = Object.fromEntries(formData.entries());
+        loadGlobal();
 
-            try {
-                const res = await fetch('/api/expenses', {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify(data)
-                });
-                if (res.ok) {
-                    alert('Recurring cost saved.');
-                    e.target.reset();
-                } else {
-                    alert('Could not save expense.');
-                }
-            } catch (err) {
-                console.error(err);
-                alert('Error connecting to server.');
+        (function () {
+            var companyId = 1;
+            var base = window.location.origin;
+            document.getElementById('xeroCbHint').textContent = base + '/api/integrations/xero/callback';
+            document.getElementById('qboCbHint').textContent = base + '/api/integrations/quickbooks/callback';
+
+            function qs(name) {
+                var m = new RegExp('[?&]' + name + '=([^&]*)').exec(window.location.search);
+                return m ? decodeURIComponent(m[1].replace(/\+/g, ' ')) : null;
             }
-        });
+            if (qs('integration') === 'xero_ok') alert('Xero connected. Run “Sync Xero now” to import actuals.');
+            if (qs('integration') === 'qbo_ok') alert('QuickBooks connected. Run “Sync QuickBooks now” to import actuals.');
+
+            async function loadIntegration() {
+                var st = document.getElementById('integrationStatus');
+                try {
+                    var res = await fetch('/api/integrations/status/' + companyId);
+                    var data = await res.json();
+                    if (!data.connections || !data.connections.length) {
+                        st.textContent = 'No accounting connections yet.';
+                    } else {
+                        st.innerHTML = data.connections.map(function (c) {
+                            return '<div><strong class="text-[var(--text-primary)]">' + c.service_name + '</strong> — connected. Expires: ' + (c.token_expires_at || 'n/a') + '</div>';
+                        }).join('');
+                    }
+                } catch (e) {
+                    st.textContent = 'Could not load integration status.';
+                }
+
+                try {
+                    var ar = await fetch('/api/actuals/summary/' + companyId);
+                    var act = await ar.json();
+                    var leg = document.getElementById('actualsLegend');
+                    leg.innerHTML = '';
+                    if (act.legend) {
+                        Object.keys(act.legend).forEach(function (k) {
+                            var li = document.createElement('li');
+                            li.innerHTML = '<strong class="text-[var(--text-primary)]">' + k + '</strong> — ' + act.legend[k];
+                            leg.appendChild(li);
+                        });
+                    }
+                    var tb = document.getElementById('actualsSummaryBody');
+                    tb.innerHTML = '';
+                    (act.by_month || []).forEach(function (row) {
+                        var tr = document.createElement('tr');
+                        tr.className = 'border-t border-[var(--border-subtle)]';
+                        var m = row.month ? String(row.month).slice(0, 10) : '';
+                        tr.innerHTML = '<td class="py-2 font-mono">' + m + '</td><td>' + row.basis + '</td><td class="text-right font-mono">' + (row.currency || '') + ' ' + parseFloat(row.total_amount).toLocaleString(undefined, { maximumFractionDigits: 0 }) + '</td>';
+                        tb.appendChild(tr);
+                    });
+                } catch (e) {}
+
+                try {
+                    var lr = await fetch('/api/actuals/lines/' + companyId + '?limit=25');
+                    var lines = await lr.json();
+                    var lb = document.getElementById('actualsLinesBody');
+                    lb.innerHTML = '';
+                    (lines || []).forEach(function (ln) {
+                        var tr = document.createElement('tr');
+                        tr.className = 'border-t border-[var(--border-subtle)]';
+                        var ld = ln.linked_lead_name || (ln.lead_id ? '#' + ln.lead_id : '—');
+                        tr.innerHTML = '<td class="p-2 font-mono">' + ln.id + '</td><td class="p-2 font-mono">' + String(ln.posted_date).slice(0, 10) + '</td><td class="p-2">' + ln.basis + '</td><td class="p-2 text-right font-mono">' + (ln.currency || '') + ' ' + parseFloat(ln.amount).toLocaleString() + '</td><td class="p-2 max-w-[140px] truncate" title="' + (ln.contact_name || '') + '">' + (ln.contact_name || '—') + '</td><td class="p-2 text-xs">' + ld + '</td>';
+                        lb.appendChild(tr);
+                    });
+                } catch (e) {}
+            }
+
+            function apiErrorMessage(j, status) {
+                var d = j && j.detail;
+                if (typeof d === 'string') return d;
+                if (Array.isArray(d)) return d.map(function (x) { return x.msg || JSON.stringify(x); }).join('; ');
+                return status ? String(status) : 'Request failed';
+            }
+
+            document.getElementById('syncXeroBtn').addEventListener('click', async function () {
+                try {
+                    var r = await fetch('/api/integrations/xero/sync', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ company_id: companyId }) });
+                    var j = await r.json();
+                    if (!r.ok) throw new Error(apiErrorMessage(j, r.status));
+                    alert('Xero sync complete. Rows upserted: ' + (j.rows_upserted != null ? j.rows_upserted : '?'));
+                    loadIntegration();
+                } catch (e) { alert('Sync failed: ' + e.message); }
+            });
+            document.getElementById('syncQboBtn').addEventListener('click', async function () {
+                try {
+                    var r = await fetch('/api/integrations/quickbooks/sync', { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify({ company_id: companyId }) });
+                    var j = await r.json();
+                    if (!r.ok) throw new Error(apiErrorMessage(j, r.status));
+                    alert('QuickBooks sync complete. Rows upserted: ' + (j.rows_upserted != null ? j.rows_upserted : '?'));
+                    loadIntegration();
+                } catch (e) { alert('Sync failed: ' + e.message); }
+            });
+
+            document.getElementById('patchLineBtn').addEventListener('click', async function () {
+                var lid = document.getElementById('patchLineId').value.trim();
+                var leadRaw = document.getElementById('patchLeadId').value.trim();
+                if (!lid) return alert('Enter line ID');
+                var body = { company_id: companyId, lead_id: leadRaw === '' ? null : parseInt(leadRaw, 10) };
+                try {
+                    var r = await fetch('/api/actuals/lines/' + lid, { method: 'PATCH', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(body) });
+                    var j = await r.json();
+                    if (!r.ok) throw new Error(apiErrorMessage(j, r.status));
+                    alert('Updated.');
+                    loadIntegration();
+                } catch (e) { alert(e.message); }
+            });
+
+            document.getElementById('mapSaveBtn').addEventListener('click', async function () {
+                var provider = document.getElementById('mapProvider').value;
+                var ext = document.getElementById('mapContactId').value.trim();
+                var leadId = parseInt(document.getElementById('mapLeadId').value.trim(), 10);
+                if (!ext || !leadId) return alert('Contact ID and Lead ID required');
+                try {
+                    var r = await fetch('/api/integrations/lead-links', {
+                        method: 'POST',
+                        headers: { 'Content-Type': 'application/json' },
+                        body: JSON.stringify({ company_id: companyId, lead_id: leadId, provider: provider, external_contact_id: ext })
+                    });
+                    var j = await r.json();
+                    if (!r.ok) throw new Error(apiErrorMessage(j, r.status));
+                    alert('Mapping saved. Re-sync to attach new lines.');
+                } catch (e) { alert(e.message); }
+            });
+
+            loadIntegration();
+        })();
     </script>
 </body>
 </html>

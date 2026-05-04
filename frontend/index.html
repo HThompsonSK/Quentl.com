@@ -3,62 +3,52 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Jam Co. Dashboard - Founder OS</title>
-    <link rel="stylesheet" href="global.css">
+    <title>Dashboard - Marmalade</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="global.css">
+    <script src="theme.js"></script>
 </head>
-<body class="p-10 font-sans min-h-screen">
+<body class="p-10 font-sans min-h-screen" data-nav="dashboard">
     <div class="max-w-6xl mx-auto">
-        
-        <header class="mb-8 border-b border-[var(--border-subtle)] pb-4 flex justify-between items-center flex-wrap gap-4">
+
+        <header class="site-header">
             <div class="shrink-0">
                 <div class="site-brand">
                     <a href="index.html" class="site-brand-logoLink" aria-label="Marmalade home">
-                        <img src="assets/marmalade-logo.png" alt="Marmalade" class="site-logo" width="512" height="288" />
+                        <span class="site-logo-text">Marmalade</span>
                     </a>
-                    <p class="site-brand-tagline text-[var(--text-muted)] text-sm">Click any month to view details</p>
                 </div>
             </div>
-            <nav class="site-nav" aria-label="Main">
-                <a href="index.html" class="site-nav-link site-nav-link--active">Dashboard</a>
-                <a href="pipeline.html" class="site-nav-link">Pipeline</a>
-                <a href="analytics.html" class="site-nav-link">Analytics</a>
-                <a href="forecast.html" class="site-nav-link">Plan Sales</a>
-                <a href="founder.html" class="site-nav-link">Founder Matrix</a>
-                <a href="projects.html" class="site-nav-link">Project Builder</a>
-                <a href="settings.html" class="site-nav-link">Settings</a>
-            </nav>
+            <div class="site-header-actions">
+            <nav id="site-nav" class="site-nav" aria-label="Main"></nav>
+            <button type="button" class="theme-toggle" data-theme-toggle aria-label="Toggle color scheme" title="Light / dark mode">
+                <span class="theme-toggle__thumb" aria-hidden="true"></span>
+            </button>
+            </div>
         </header>
+        <script src="site-nav.js"></script>
 
-        <div id="solvency-hero" class="surface-card mb-8 p-12 transition-colors duration-500 flex flex-col items-center justify-center text-center">
-            <h3 class="text-[10px] font-bold uppercase tracking-widest text-[var(--text-muted)] mb-3">Estimated Cash Runway</h3>
-            <div id="runway-text" class="text-6xl font-mono font-black mb-3 text-[var(--text-primary)] tracking-tight">Calculating...</div>
-            <div id="runway-subtext" class="text-xs font-mono text-[var(--text-muted)] opacity-80">Syncing with Solvency Engine</div>
+        <div class="mb-8 flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
+            <div>
+                <h2 class="text-2xl font-bold tracking-tight text-[var(--text-primary)]">Dashboard</h2>
+                <p class="text-[var(--text-muted)] text-sm mt-1">Two tiles per row. Drag <span class="font-mono text-[var(--text-primary)]">⠿</span> to reorder. A lone tile spans the full row; drop on its left or right half to place before or beside it. Layout is saved in this browser.</p>
+            </div>
+            <div class="flex flex-wrap items-center gap-2">
+                <label class="sr-only" for="addTileType">Tile type</label>
+                <select id="addTileType" class="text-sm bg-[var(--bg-surface)] border border-[var(--border-subtle)] text-[var(--text-primary)] rounded-md px-3 py-2 font-mono">
+                </select>
+                <button type="button" id="addTileBtn" class="btn-accent text-sm">Add tile</button>
+                <button type="button" id="resetDashboardBtn" class="btn-primary text-sm">Reset layout</button>
+            </div>
         </div>
 
-        <div id="summary-cards" class="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-            </div>
-
-        <div class="surface-card overflow-hidden">
-            <table class="w-full text-left border-collapse">
-                <thead>
-                    <tr>
-                        <th>Month</th>
-                        <th class="text-right">Revenue</th>
-                        <th class="text-right">Break-Even</th>
-                        <th class="text-right">Status</th>
-                        <th class="text-center">Action</th>
-                    </tr>
-                </thead>
-                <tbody id="forecast-table-body">
-                    </tbody>
-            </table>
+        <div id="dashboard-grid" class="flex flex-col gap-6">
         </div>
     </div>
 
     <div id="detailModal" class="modal-backdrop fixed inset-0 hidden flex items-center justify-center z-50">
         <div class="modal-surface w-full max-w-lg overflow-hidden">
-            <div class="px-6 py-5 border-b border-[var(--border-subtle)] flex justify-between items-center bg-[#141414]">
+            <div class="px-6 py-5 border-b border-[var(--border-subtle)] flex justify-between items-center bg-[var(--bg-elevated)]">
                 <h3 class="text-lg font-semibold text-[var(--text-primary)] tracking-tight" id="modalTitle">Month Details</h3>
                 <button onclick="closeModal()" class="text-[var(--text-muted)] hover:text-[var(--death-red)] font-mono text-xl transition">&times;</button>
             </div>
@@ -76,135 +66,497 @@
                         </tbody>
                 </table>
             </div>
-            <div class="bg-[#141414] px-6 py-4 border-t border-[var(--border-subtle)] text-right">
+            <div class="bg-[var(--bg-elevated)] px-6 py-4 border-t border-[var(--border-subtle)] text-right">
                 <button onclick="closeModal()" class="btn-primary">Close Details</button>
             </div>
         </div>
     </div>
 
     <script>
-        let currentData = [];
+        const LAYOUT_KEY = 'marmalade_dashboard_layout_v1';
 
-        async function loadDashboard() {
-            try {
-                const response = await fetch('/api/dashboard/1');
-                currentData = await response.json();
-                renderTable(currentData);
-                renderCards(currentData);
-            } catch (error) { console.error(error); }
-        }
-
-        async function updateSolvencyMetric() {
-            try {
-               const response = await fetch('/api/runway/1');
-               const data = await response.json();
-
-               const hero = document.getElementById('solvency-hero');
-               const text = document.getElementById('runway-text');
-               const subtext = document.getElementById('runway-subtext');
-
-               text.innerText = data.status_message;
-               subtext.innerText = `Based on £${data.starting_cash.toLocaleString()} cash and £${data.burn_rate.toLocaleString()} monthly burn.`;
-
-               // Dark Mode Solvency Styling
-               hero.className = "surface-card mb-8 p-12 transition-colors duration-500 flex flex-col items-center justify-center text-center border-t-4";
-               
-               if (data.status_color === 'Green') {
-                   hero.classList.add("border-t-[var(--runway-green)]");
-                   text.style.color = "var(--runway-green)";
-               } else if (data.status_color === 'Yellow') {
-                   hero.classList.add("border-t-[var(--warning-yellow)]");
-                   text.style.color = "var(--warning-yellow)";
-               } else if (data.status_color === 'Red') {
-                   hero.classList.add("border-t-[var(--death-red)]", "animate-pulse");
-                   text.style.color = "var(--death-red)";
-               }
-            } catch (error) { console.error("Solvency engine failed:", error); }
-        }
-
-        window.onload = () => {
-            loadDashboard();
-            updateSolvencyMetric(); 
+        const TILE_TYPES = {
+            runway: {
+                label: 'Cash runway',
+                desc: 'Estimated months of runway from burn and liquidity.'
+            },
+            financial_overview: {
+                label: 'Financial overview',
+                desc: 'Fixed costs, YTD profit, pipeline cover — snapshot cards.'
+            },
+            liquidity: {
+                label: 'Cash & liquidity',
+                desc: 'Cash on hand, burn, weighted pipeline, and one-off CAPEX.'
+            },
+            fixed_costs: {
+                label: 'Monthly fixed costs',
+                desc: 'Operating overhead from your latest forecast row.'
+            },
+            ytd_profit: {
+                label: 'YTD net profit',
+                desc: 'Running cumulative profit through the forecast window.'
+            },
+            pipeline_health: {
+                label: 'Pipeline health',
+                desc: 'How much pipeline covers forecast shortfalls.'
+            },
+            forecast_table: {
+                label: 'Forecast by month',
+                desc: 'Month-by-month revenue vs break-even with drill-down.'
+            }
         };
 
-        function renderTable(data) {
-            const tbody = document.getElementById('forecast-table-body');
-            tbody.innerHTML = '';
-            data.forEach(row => {
-                const dateRaw = row.forecast_month; 
-                const dateStr = new Date(dateRaw).toLocaleDateString('en-GB', {month:'short', year:'numeric'});
-                const isSafe = parseFloat(row.revenue) >= parseFloat(row.revenue_needed_to_break_even);
+        const DEFAULT_TILES = [
+            { id: 'tile-runway', type: 'runway' },
+            { id: 'tile-overview', type: 'financial_overview' },
+            { id: 'tile-forecast', type: 'forecast_table' }
+        ];
 
-                const tr = document.createElement('tr');
-                tr.className = "hover:bg-[#222] transition cursor-pointer group";
-                tr.onclick = () => openModal(dateRaw, dateStr);
+        let currentData = [];
+        let runwayData = null;
 
-                const statusStyle = isSafe 
-                    ? 'border border-[var(--runway-green)] text-[var(--runway-green)] bg-[#1a2b22]' 
-                    : 'border border-[var(--death-red)] text-[var(--death-red)] bg-[#3a1c1c]';
+        function loadLayout() {
+            try {
+                const raw = localStorage.getItem(LAYOUT_KEY);
+                if (!raw) return DEFAULT_TILES.slice();
+                const parsed = JSON.parse(raw);
+                if (!parsed.tiles || !Array.isArray(parsed.tiles) || parsed.tiles.length === 0) {
+                    return DEFAULT_TILES.slice();
+                }
+                return parsed.tiles;
+            } catch (e) {
+                return DEFAULT_TILES.slice();
+            }
+        }
 
-                tr.innerHTML = `
-                    <td class="font-medium group-hover:text-white transition">${dateStr}</td>
-                    <td class="text-right font-mono text-[var(--text-primary)]">£${parseFloat(row.revenue).toLocaleString(undefined, {minimumFractionDigits: 2})}</td>
-                    <td class="text-right font-mono text-[var(--text-muted)]">£${parseFloat(row.revenue_needed_to_break_even).toLocaleString(undefined, {minimumFractionDigits: 2})}</td>
-                    <td class="text-right">
-                        <span class="px-2 py-1 rounded text-[10px] font-mono uppercase tracking-widest ${statusStyle}">
-                            ${isSafe ? 'Afloat 🚢' : 'Sinking ⚠️'}
-                        </span>
-                    </td>
-                    <td class="text-center">
-                        <span class="text-[var(--text-muted)] group-hover:text-[var(--text-primary)] text-xs font-mono uppercase tracking-widest transition">View</span>
-                    </td>
-                `;
-                tbody.appendChild(tr);
+        function saveLayout(tiles) {
+            localStorage.setItem(LAYOUT_KEY, JSON.stringify({ tiles }));
+        }
+
+        function populateAddSelect() {
+            const sel = document.getElementById('addTileType');
+            sel.innerHTML = Object.entries(TILE_TYPES).map(([key, meta]) =>
+                `<option value="${key}">${meta.label}</option>`
+            ).join('');
+        }
+
+        function removeTile(tileId) {
+            if (!confirm('Remove this tile from your dashboard?')) return;
+            const next = loadLayout().filter(t => t.id !== tileId);
+            saveLayout(next);
+            renderDashboardShell();
+            refreshAllData();
+        }
+
+        function addTile() {
+            const type = document.getElementById('addTileType').value;
+            if (!TILE_TYPES[type]) return;
+            const tiles = loadLayout();
+            tiles.push({ id: 'tile-' + Date.now(), type });
+            saveLayout(tiles);
+            renderDashboardShell();
+            refreshAllData();
+        }
+
+        function resetLayout() {
+            if (!confirm('Reset dashboard to the default tiles?')) return;
+            localStorage.removeItem(LAYOUT_KEY);
+            renderDashboardShell();
+            refreshAllData();
+        }
+
+        function chunkIntoRows(tiles) {
+            const rows = [];
+            for (let i = 0; i < tiles.length; i += 2) {
+                rows.push(tiles.slice(i, i + 2));
+            }
+            return rows;
+        }
+
+        let draggingTileId = null;
+
+        function moveTileRelative(dragId, targetId, insertAfter) {
+            const orig = loadLayout();
+            const dragItem = orig.find(t => t.id === dragId);
+            if (!dragItem || dragId === targetId) return;
+            const rest = orig.filter(t => t.id !== dragId);
+            let idx = rest.findIndex(t => t.id === targetId);
+            if (idx < 0) return;
+            if (insertAfter) idx++;
+            rest.splice(idx, 0, dragItem);
+            saveLayout(rest);
+            renderDashboardShell();
+            refreshAllData();
+        }
+
+        function onTileDragStart(e) {
+            const handle = e.currentTarget;
+            const tile = handle.closest('.dashboard-tile');
+            if (!tile) return;
+            draggingTileId = tile.dataset.tileId;
+            e.dataTransfer.setData('text/plain', draggingTileId);
+            e.dataTransfer.effectAllowed = 'move';
+            tile.classList.add('dashboard-tile--dragging');
+        }
+
+        function onTileDragEnd(e) {
+            const handle = e.currentTarget;
+            const tile = handle.closest('.dashboard-tile');
+            if (tile) tile.classList.remove('dashboard-tile--dragging');
+            document.querySelectorAll('.dashboard-tile--drop-target').forEach(el => el.classList.remove('dashboard-tile--drop-target'));
+            draggingTileId = null;
+        }
+
+        function onTileDragOver(e) {
+            e.preventDefault();
+            e.dataTransfer.dropEffect = 'move';
+            const tile = e.currentTarget;
+            if (!tile.classList.contains('dashboard-tile')) return;
+            if (tile.dataset.tileId === draggingTileId) return;
+            tile.classList.add('dashboard-tile--drop-target');
+        }
+
+        function onTileDragLeave(e) {
+            const tile = e.currentTarget;
+            const rel = e.relatedTarget;
+            if (rel && tile.contains(rel)) return;
+            tile.classList.remove('dashboard-tile--drop-target');
+        }
+
+        function onTileDrop(e) {
+            e.preventDefault();
+            const tile = e.currentTarget;
+            tile.classList.remove('dashboard-tile--drop-target');
+            const dragId = e.dataTransfer.getData('text/plain');
+            const targetId = tile.dataset.tileId;
+            if (!dragId || !targetId || dragId === targetId) return;
+            const rect = tile.getBoundingClientRect();
+            const insertAfter = (e.clientX - rect.left) > rect.width / 2;
+            moveTileRelative(dragId, targetId, insertAfter);
+        }
+
+        function createTileElement(tile) {
+            const meta = TILE_TYPES[tile.type];
+            if (!meta) return null;
+
+            const wrap = document.createElement('div');
+            wrap.className = 'dashboard-tile surface-card overflow-hidden flex flex-col border border-[var(--border-subtle)] min-w-0';
+            wrap.dataset.tileId = tile.id;
+            wrap.dataset.tileType = tile.type;
+
+            wrap.innerHTML = `
+                <div class="flex justify-between items-start gap-2 px-4 py-3 border-b border-[var(--border-subtle)] bg-[var(--bg-elevated)] shrink-0">
+                    <div class="flex items-start gap-2 min-w-0 flex-1">
+                        <button type="button" class="dashboard-tile__drag shrink-0 cursor-grab active:cursor-grabbing text-[var(--text-muted)] hover:text-[var(--text-primary)] font-mono text-sm leading-none px-1 py-0.5 rounded border border-transparent hover:border-[var(--border-subtle)] select-none" draggable="true" title="Drag to reorder" aria-label="Drag to reorder">⠿</button>
+                        <div class="min-w-0">
+                            <h3 class="text-xs font-semibold text-[var(--text-muted)] uppercase tracking-widest">${meta.label}</h3>
+                            <p class="text-[10px] text-[var(--text-muted)] mt-0.5 opacity-90 hidden sm:block">${meta.desc}</p>
+                        </div>
+                    </div>
+                    <button type="button" class="tile-remove text-[var(--text-muted)] hover:text-[var(--death-red)] font-mono text-xl leading-none px-1 rounded hover:bg-[var(--surface-hover)]" aria-label="Remove tile">×</button>
+                </div>
+                <div class="tile-body flex-1 min-h-[4rem]" data-tile-body></div>
+            `;
+
+            wrap.querySelector('.tile-remove').onclick = (ev) => { ev.stopPropagation(); removeTile(tile.id); };
+
+            const handle = wrap.querySelector('.dashboard-tile__drag');
+            handle.addEventListener('dragstart', onTileDragStart);
+            handle.addEventListener('dragend', onTileDragEnd);
+
+            wrap.addEventListener('dragover', onTileDragOver);
+            wrap.addEventListener('dragleave', onTileDragLeave);
+            wrap.addEventListener('drop', onTileDrop);
+
+            return wrap;
+        }
+
+        function renderDashboardShell() {
+            const grid = document.getElementById('dashboard-grid');
+            grid.innerHTML = '';
+            const tiles = loadLayout();
+            const rows = chunkIntoRows(tiles);
+
+            rows.forEach(rowTiles => {
+                const row = document.createElement('div');
+                row.className = 'dashboard-row grid grid-cols-1 md:grid-cols-2 gap-6';
+
+                if (rowTiles.length === 1) {
+                    const el = createTileElement(rowTiles[0]);
+                    if (el) {
+                        el.classList.add('md:col-span-2');
+                        row.appendChild(el);
+                    }
+                } else {
+                    rowTiles.forEach(t => {
+                        const el = createTileElement(t);
+                        if (el) row.appendChild(el);
+                    });
+                }
+                grid.appendChild(row);
             });
         }
 
-        function renderCards(data) {
-            if(data.length === 0) return;
-            
+        function applyRunwayTile(el, data) {
+            const body = el.querySelector('[data-tile-body]');
+            if (!body || !data) {
+                if (body) body.innerHTML = '<p class="text-sm text-[var(--text-muted)] p-6">Could not load runway.</p>';
+                return;
+            }
+
+            body.className = 'tile-body flex-1 flex flex-col items-center justify-center p-10 md:p-12 text-center border-t-4 transition-colors duration-500';
+
+            if (data.status_color === 'Green') {
+                body.style.borderColor = 'var(--runway-green)';
+            } else if (data.status_color === 'Yellow') {
+                body.style.borderColor = 'var(--warning-yellow)';
+            } else if (data.status_color === 'Red') {
+                body.style.borderColor = 'var(--death-red)';
+            } else {
+                body.style.borderColor = 'var(--border-subtle)';
+            }
+
+            let valueColor = 'var(--text-primary)';
+            if (data.status_color === 'Green') valueColor = 'var(--runway-green)';
+            else if (data.status_color === 'Yellow') valueColor = 'var(--warning-yellow)';
+            else if (data.status_color === 'Red') valueColor = 'var(--death-red)';
+
+            body.innerHTML = `
+                <p class="text-[10px] font-bold uppercase tracking-widest text-[var(--text-muted)] mb-3">Estimated cash runway</p>
+                <p class="text-5xl md:text-6xl font-mono font-black mb-3 tracking-tight" style="color:${valueColor}">${data.status_message || '—'}</p>
+                <p class="text-xs font-mono text-[var(--text-muted)] opacity-80">Based on £${Number(data.starting_cash || 0).toLocaleString()} cash and £${Number(data.burn_rate || 0).toLocaleString()} monthly burn.</p>
+            `;
+        }
+
+        function applyLiquidityTile(el, data) {
+            const body = el.querySelector('[data-tile-body]');
+            if (!body || !data) {
+                if (body) body.innerHTML = '<p class="text-sm text-[var(--text-muted)] p-4">No data.</p>';
+                return;
+            }
+            body.className = 'tile-body flex-1 p-6';
+            body.innerHTML = `
+                <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 text-center">
+                    <div class="surface-card p-4 border border-[var(--border-subtle)]">
+                        <p class="text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-widest mb-1">Cash on hand</p>
+                        <p class="text-xl font-mono text-[var(--text-primary)]">£${Number(data.starting_cash || 0).toLocaleString()}</p>
+                    </div>
+                    <div class="surface-card p-4 border border-[var(--border-subtle)]">
+                        <p class="text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-widest mb-1">Monthly burn</p>
+                        <p class="text-xl font-mono text-[var(--accent-orange)]">£${Number(data.burn_rate || 0).toLocaleString()}</p>
+                    </div>
+                    <div class="surface-card p-4 border border-[var(--border-subtle)]">
+                        <p class="text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-widest mb-1">Weighted pipeline</p>
+                        <p class="text-xl font-mono text-[var(--runway-green)]">£${Number(data.expected_cash || 0).toLocaleString()}</p>
+                    </div>
+                    <div class="surface-card p-4 border border-[var(--border-subtle)]">
+                        <p class="text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-widest mb-1">One-off CAPEX</p>
+                        <p class="text-xl font-mono text-[var(--death-red)]">£${Number(data.capex || 0).toLocaleString()}</p>
+                    </div>
+                </div>
+            `;
+        }
+
+        function applyFinancialOverviewTile(el, data) {
+            const body = el.querySelector('[data-tile-body]');
+            if (!body) return;
+            if (!data || data.length === 0) {
+                body.className = 'tile-body flex-1 p-6';
+                body.innerHTML = '<p class="text-sm text-[var(--text-muted)]">No forecast data yet. Add products and unit forecasts.</p>';
+                return;
+            }
+
             const totalShortfall = data.reduce((acc, row) => {
                 const profit = parseFloat(row.net_profit);
                 return profit < 0 ? acc + Math.abs(profit) : acc;
             }, 0);
-
             const pipelineWeighted = parseFloat(data[0].weighted_pipeline_value);
             const coverage = totalShortfall > 0 ? (pipelineWeighted / totalShortfall) * 100 : 100;
-            
-            let healthStatus = "CRITICAL 🚨";
-            let healthColor = "var(--death-red)";
-            if (coverage >= 100) { healthStatus = "HEALTHY ✅"; healthColor = "var(--runway-green)"; }
-            else if (coverage >= 50) { healthStatus = "AT RISK ⚠️"; healthColor = "var(--warning-yellow)"; }
 
-            document.getElementById('summary-cards').innerHTML = `
-                <div class="surface-card p-6 border-l-2 border-l-[var(--border-subtle)]">
-                    <h3 class="text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-widest">Monthly Fixed Costs</h3>
-                    <p class="text-2xl font-mono text-[var(--text-primary)] mt-2">£${parseFloat(data[0].fixed_costs).toLocaleString(undefined, {maximumFractionDigits: 0})}</p>
-                </div>
+            let healthStatus = 'CRITICAL 🚨';
+            let healthColor = 'var(--death-red)';
+            if (coverage >= 100) { healthStatus = 'HEALTHY ✅'; healthColor = 'var(--runway-green)'; }
+            else if (coverage >= 50) { healthStatus = 'AT RISK ⚠️'; healthColor = 'var(--warning-yellow)'; }
 
-                <div class="surface-card p-6 border-l-2 border-l-[var(--accent-indigo)]">
-                    <h3 class="text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-widest">YTD Net Profit (Running)</h3>
-                    <p class="text-2xl font-mono text-[var(--accent-indigo)] mt-2">£${parseFloat(data[data.length - 1].ytd_net_profit).toLocaleString()}</p>
-                    <p class="text-[10px] font-mono text-[var(--text-muted)] mt-1">Cumulative by end of forecast</p>
-                </div>
-
-                <div class="surface-card p-6 border-l-2" style="border-left-color: ${healthColor}">
-                    <h3 class="text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-widest">Pipeline Health</h3>
-                    <div class="flex justify-between items-end mt-2">
-                        <div>
-                            <p class="text-2xl font-mono text-[var(--text-primary)]">${coverage.toFixed(0)}% <span class="text-sm">Cover</span></p>
-                            <p class="text-[10px] font-mono font-bold mt-1" style="color: ${healthColor}">${healthStatus}</p>
-                        </div>
-                        <div class="text-right text-[10px] font-mono text-[var(--text-muted)] space-y-1">
-                            <p>Shortfall: £${totalShortfall.toLocaleString()}</p>
-                            <p>Pipeline: £${pipelineWeighted.toLocaleString()}</p>
+            body.className = 'tile-body flex-1 p-6';
+            body.innerHTML = `
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div class="surface-card p-5 border-l-2 border-l-[var(--border-subtle)]">
+                        <h4 class="text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-widest">Monthly fixed costs</h4>
+                        <p class="text-2xl font-mono text-[var(--text-primary)] mt-2">£${parseFloat(data[0].fixed_costs).toLocaleString(undefined, { maximumFractionDigits: 0 })}</p>
+                    </div>
+                    <div class="surface-card p-5 border-l-2 border-l-[var(--accent-indigo)]">
+                        <h4 class="text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-widest">YTD net profit (running)</h4>
+                        <p class="text-2xl font-mono text-[var(--accent-indigo)] mt-2">£${parseFloat(data[data.length - 1].ytd_net_profit).toLocaleString()}</p>
+                        <p class="text-[10px] font-mono text-[var(--text-muted)] mt-1">Cumulative by end of forecast</p>
+                    </div>
+                    <div class="surface-card p-5 border-l-2" style="border-left-color: ${healthColor}">
+                        <h4 class="text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-widest">Pipeline health</h4>
+                        <div class="flex justify-between items-end mt-2 gap-2">
+                            <div>
+                                <p class="text-2xl font-mono text-[var(--text-primary)]">${coverage.toFixed(0)}% <span class="text-sm">cover</span></p>
+                                <p class="text-[10px] font-mono font-bold mt-1" style="color: ${healthColor}">${healthStatus}</p>
+                            </div>
+                            <div class="text-right text-[10px] font-mono text-[var(--text-muted)] space-y-1">
+                                <p>Shortfall: £${totalShortfall.toLocaleString()}</p>
+                                <p>Pipeline: £${pipelineWeighted.toLocaleString()}</p>
+                            </div>
                         </div>
                     </div>
                 </div>
             `;
         }
 
-        // --- MODAL LOGIC ---
+        function applySingleMetricTile(el, kind) {
+            const body = el.querySelector('[data-tile-body]');
+            if (!body) return;
+            body.className = 'tile-body flex-1 p-6 flex flex-col justify-center';
+
+            if (!currentData || currentData.length === 0) {
+                body.innerHTML = '<p class="text-sm text-[var(--text-muted)]">No forecast data yet.</p>';
+                return;
+            }
+
+            const data = currentData;
+            if (kind === 'fixed_costs') {
+                body.innerHTML = `
+                    <p class="text-3xl font-mono text-[var(--text-primary)]">£${parseFloat(data[0].fixed_costs).toLocaleString(undefined, { maximumFractionDigits: 0 })}</p>
+                    <p class="text-[10px] font-mono text-[var(--text-muted)] mt-2">From latest forecast month</p>
+                `;
+                return;
+            }
+            if (kind === 'ytd_profit') {
+                body.innerHTML = `
+                    <p class="text-3xl font-mono text-[var(--accent-indigo)]">£${parseFloat(data[data.length - 1].ytd_net_profit).toLocaleString()}</p>
+                    <p class="text-[10px] font-mono text-[var(--text-muted)] mt-2">Through end of forecast</p>
+                `;
+                return;
+            }
+            if (kind === 'pipeline_health') {
+                const totalShortfall = data.reduce((acc, row) => {
+                    const profit = parseFloat(row.net_profit);
+                    return profit < 0 ? acc + Math.abs(profit) : acc;
+                }, 0);
+                const pipelineWeighted = parseFloat(data[0].weighted_pipeline_value);
+                const coverage = totalShortfall > 0 ? (pipelineWeighted / totalShortfall) * 100 : 100;
+                let healthStatus = 'CRITICAL 🚨';
+                let healthColor = 'var(--death-red)';
+                if (coverage >= 100) { healthStatus = 'HEALTHY ✅'; healthColor = 'var(--runway-green)'; }
+                else if (coverage >= 50) { healthStatus = 'AT RISK ⚠️'; healthColor = 'var(--warning-yellow)'; }
+                body.innerHTML = `
+                    <p class="text-3xl font-mono text-[var(--text-primary)]">${coverage.toFixed(0)}% <span class="text-lg text-[var(--text-muted)]">cover</span></p>
+                    <p class="text-[10px] font-mono font-bold mt-2" style="color:${healthColor}">${healthStatus}</p>
+                    <p class="text-xs font-mono text-[var(--text-muted)] mt-2">Shortfall £${totalShortfall.toLocaleString()} · Pipeline £${pipelineWeighted.toLocaleString()}</p>
+                `;
+            }
+        }
+
+        function renderForecastTableInTile(el) {
+            const body = el.querySelector('[data-tile-body]');
+            if (!body) return;
+            body.className = 'tile-body flex-1 p-0 overflow-hidden';
+            const tableId = 'forecast-tbody-' + el.dataset.tileId;
+            body.innerHTML = `
+                <div class="overflow-x-auto">
+                    <table class="w-full text-left border-collapse">
+                        <thead>
+                            <tr>
+                                <th class="pl-4 md:pl-6">Month</th>
+                                <th class="text-right">Revenue</th>
+                                <th class="text-right">Break-even</th>
+                                <th class="text-right">Status</th>
+                                <th class="text-center pr-4 md:pr-6">Action</th>
+                            </tr>
+                        </thead>
+                        <tbody id="${tableId}"></tbody>
+                    </table>
+                </div>
+            `;
+            fillForecastTableBody(tableId, currentData);
+        }
+
+        function fillForecastTableBody(tbodyId, data) {
+            const tbody = document.getElementById(tbodyId);
+            if (!tbody) return;
+            tbody.innerHTML = '';
+            if (!data || data.length === 0) {
+                tbody.innerHTML = '<tr><td colspan="5" class="text-center py-8 text-[var(--text-muted)] font-mono text-sm">No forecast rows yet.</td></tr>';
+                return;
+            }
+            data.forEach(row => {
+                const dateRaw = row.forecast_month;
+                const dateStr = new Date(dateRaw).toLocaleDateString('en-GB', { month: 'short', year: 'numeric' });
+                const isSafe = parseFloat(row.revenue) >= parseFloat(row.revenue_needed_to_break_even);
+                const statusStyle = isSafe
+                    ? 'border border-[var(--runway-green)] text-[var(--runway-green)] bg-[var(--status-good-bg)]'
+                    : 'border border-[var(--death-red)] text-[var(--death-red)] bg-[var(--status-bad-bg)]';
+
+                const tr = document.createElement('tr');
+                tr.className = 'hover:bg-[var(--row-hover)] transition cursor-pointer group';
+                tr.onclick = () => openModal(dateRaw, dateStr);
+                tr.innerHTML = `
+                    <td class="font-medium group-hover:text-[var(--text-primary)] transition pl-4 md:pl-6">${dateStr}</td>
+                    <td class="text-right font-mono text-[var(--text-primary)]">£${parseFloat(row.revenue).toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
+                    <td class="text-right font-mono text-[var(--text-muted)]">£${parseFloat(row.revenue_needed_to_break_even).toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
+                    <td class="text-right">
+                        <span class="px-2 py-1 rounded text-[10px] font-mono uppercase tracking-widest ${statusStyle}">${isSafe ? 'Afloat 🚢' : 'Sinking ⚠️'}</span>
+                    </td>
+                    <td class="text-center pr-4 md:pr-6"><span class="text-[var(--text-muted)] group-hover:text-[var(--text-primary)] text-xs font-mono uppercase tracking-widest transition">View</span></td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function refreshAllData() {
+            document.querySelectorAll('.dashboard-tile').forEach(el => {
+                const type = el.dataset.tileType;
+                if (type === 'runway') applyRunwayTile(el, runwayData);
+                else if (type === 'liquidity') applyLiquidityTile(el, runwayData);
+                else if (type === 'financial_overview') applyFinancialOverviewTile(el, currentData);
+                else if (type === 'fixed_costs') applySingleMetricTile(el, 'fixed_costs');
+                else if (type === 'ytd_profit') applySingleMetricTile(el, 'ytd_profit');
+                else if (type === 'pipeline_health') applySingleMetricTile(el, 'pipeline_health');
+                else if (type === 'forecast_table') {
+                    renderForecastTableInTile(el);
+                }
+            });
+        }
+
+        async function loadDashboard() {
+            try {
+                const response = await fetch('/api/dashboard/1');
+                currentData = await response.json();
+            } catch (error) {
+                console.error(error);
+                currentData = [];
+            }
+        }
+
+        async function loadRunway() {
+            try {
+                const response = await fetch('/api/runway/1');
+                runwayData = await response.json();
+            } catch (error) {
+                console.error(error);
+                runwayData = null;
+            }
+        }
+
+        async function refresh() {
+            await loadDashboard();
+            await loadRunway();
+            refreshAllData();
+        }
+
+        document.getElementById('addTileBtn').addEventListener('click', addTile);
+        document.getElementById('resetDashboardBtn').addEventListener('click', resetLayout);
+
+        window.onload = () => {
+            populateAddSelect();
+            renderDashboardShell();
+            refresh();
+        };
+
         async function openModal(rawDate, prettyDate) {
             document.getElementById('modalTitle').innerText = `Sales for ${prettyDate}`;
             const modal = document.getElementById('detailModal');
@@ -215,21 +567,19 @@
             try {
                 const res = await fetch(`/api/dashboard/1/details/${rawDate}`);
                 const items = await res.json();
-                
+
                 tbody.innerHTML = '';
-                if(items.length === 0) tbody.innerHTML = '<tr><td colspan="4" class="text-center py-8 text-[var(--text-muted)] font-mono text-sm">No sales planned.</td></tr>';
+                if (items.length === 0) tbody.innerHTML = '<tr><td colspan="4" class="text-center py-8 text-[var(--text-muted)] font-mono text-sm">No sales planned.</td></tr>';
 
                 items.forEach(item => {
                     const tr = document.createElement('tr');
-                    tr.className = "hover:bg-[#222] transition";
+                    tr.className = 'hover:bg-[var(--row-hover)] transition';
                     tr.innerHTML = `
                         <td class="pl-6 py-4 text-sm font-medium text-[var(--text-primary)]">${item.name}</td>
                         <td class="text-right py-4 font-mono text-sm text-[var(--text-muted)]">${item.units_forecasted}</td>
-                        <td class="text-right py-4 font-mono text-sm text-[var(--text-primary)]">£${parseFloat(item.revenue).toLocaleString(undefined, {minimumFractionDigits: 2})}</td>
+                        <td class="text-right py-4 font-mono text-sm text-[var(--text-primary)]">£${parseFloat(item.revenue).toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
                         <td class="text-center pr-6 py-4">
-                            <button onclick="deleteItem(${item.id}, '${rawDate}', '${prettyDate}', event)" class="btn-primary hover:border-[var(--death-red)] hover:text-[var(--death-red)] text-xs py-1 px-2">
-                                Delete
-                            </button>
+                            <button onclick="deleteItem(${item.id}, '${rawDate}', '${prettyDate}', event)" class="btn-primary hover:border-[var(--death-red)] hover:text-[var(--death-red)] text-xs py-1 px-2">Delete</button>
                         </td>
                     `;
                     tbody.appendChild(tr);
@@ -243,11 +593,11 @@
 
         async function deleteItem(id, rawDate, prettyDate, event) {
             event.stopPropagation();
-            if(!confirm("Delete this sales forecast?")) return;
+            if (!confirm('Delete this sales forecast?')) return;
 
             await fetch(`/api/forecast/${id}`, { method: 'DELETE' });
             openModal(rawDate, prettyDate);
-            loadDashboard(); 
+            await refresh();
         }
     </script>
 </body>

@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Operating costs - Marmalade</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="global.css">
+    <script src="theme.js"></script>
+</head>
+<body class="p-10 font-sans min-h-screen" data-nav="costs">
+    <!-- app-shell: max-w-6xl (CSS also pins width for costs if HTML cache is stale) -->
+    <div class="max-w-6xl mx-auto">
+        <header class="site-header">
+            <div class="shrink-0">
+                <div class="site-brand">
+                    <a href="index.html" class="site-brand-logoLink" aria-label="Marmalade home">
+                        <span class="site-logo-text">Marmalade</span>
+                    </a>
+                </div>
+            </div>
+            <div class="site-header-actions">
+            <nav id="site-nav" class="site-nav" aria-label="Main"></nav>
+            <button type="button" class="theme-toggle" data-theme-toggle aria-label="Toggle color scheme" title="Light / dark mode">
+                <span class="theme-toggle__thumb" aria-hidden="true"></span>
+            </button>
+            </div>
+        </header>
+        <script src="site-nav.js"></script>
+
+        <div class="mb-8">
+            <h2 class="text-2xl font-bold tracking-tight text-[var(--text-primary)]">Operating costs</h2>
+            <p class="text-[var(--text-muted)] text-sm mt-1">Fixed monthly OPEX — rolls into burn, break-even, and runway.</p>
+        </div>
+
+        <div class="surface-card p-6 border-t-2 border-t-[var(--accent-orange)]">
+            <h3 class="text-xs font-semibold text-[var(--text-muted)] uppercase tracking-widest mb-2">Add fixed operating cost</h3>
+            <p class="text-sm text-[var(--text-muted)] mb-6 border-b border-[var(--border-subtle)] pb-4">Recurring line items (rent, software, insurance, etc.).</p>
+            <form id="expenseForm" class="space-y-6">
+                <input type="hidden" name="company_id" value="1">
+
+                <div>
+                    <label class="block text-[10px] font-semibold text-[var(--text-muted)] uppercase tracking-widest mb-2">Line item</label>
+                    <input type="text" name="name" placeholder="e.g. Insurance" class="w-full font-mono" required>
+                </div>
+
+                <div>
+                    <label class="block text-[10px] font-semibold text-[var(--text-muted)] uppercase tracking-widest mb-2">Monthly amount (£)</label>
+                    <input type="number" step="0.01" name="amount" placeholder="50.00" class="w-full font-mono" required>
+                </div>
+
+                <button type="submit" class="btn-accent w-full">Save recurring cost</button>
+            </form>
+        </div>
+    </div>
+
+    <script>
+        document.getElementById('expenseForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const formData = new FormData(e.target);
+            const data = Object.fromEntries(formData.entries());
+
+            try {
+                const res = await fetch('/api/expenses', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+                if (res.ok) {
+                    alert('Recurring cost saved.');
+                    e.target.reset();
+                } else {
+                    alert('Could not save expense.');
+                }
+            } catch (err) {
+                console.error(err);
+                alert('Error connecting to server.');
+            }
+        });
+    </script>
+</body>
+</html>

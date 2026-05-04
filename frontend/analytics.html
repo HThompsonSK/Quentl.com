@@ -3,35 +3,33 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Analytics - Marmalade</title>
-    <link rel="stylesheet" href="global.css">
+    <title>Sales analytics - Marmalade</title>
     <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="global.css">
+    <script src="theme.js"></script>
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
 </head>
-<body class="p-10 font-sans min-h-screen">
+<body class="p-10 font-sans min-h-screen" data-nav="analytics">
     <div class="max-w-6xl mx-auto">
-        <header class="mb-8 border-b border-[var(--border-subtle)] pb-4 flex justify-between items-center flex-wrap gap-4">
+        <header class="site-header">
             <div class="shrink-0">
                 <div class="site-brand">
                     <a href="index.html" class="site-brand-logoLink" aria-label="Marmalade home">
-                        <img src="assets/marmalade-logo.png" alt="Marmalade" class="site-logo" width="512" height="288" />
+                        <span class="site-logo-text">Marmalade</span>
                     </a>
-                    <p class="site-brand-tagline text-[var(--text-muted)] text-sm">Click any month to view details</p>
                 </div>
             </div>
-            <nav class="site-nav" aria-label="Main">
-                <a href="index.html" class="site-nav-link">Dashboard</a>
-                <a href="pipeline.html" class="site-nav-link">Pipeline</a>
-                <a href="analytics.html" class="site-nav-link site-nav-link--active">Analytics</a>
-                <a href="forecast.html" class="site-nav-link">Plan Sales</a>
-                <a href="founder.html" class="site-nav-link">Founder Matrix</a>
-                <a href="projects.html" class="site-nav-link">Project Builder</a>
-                <a href="settings.html" class="site-nav-link">Settings</a>
-            </nav>
+            <div class="site-header-actions">
+            <nav id="site-nav" class="site-nav" aria-label="Main"></nav>
+            <button type="button" class="theme-toggle" data-theme-toggle aria-label="Toggle color scheme" title="Light / dark mode">
+                <span class="theme-toggle__thumb" aria-hidden="true"></span>
+            </button>
+            </div>
         </header>
+        <script src="site-nav.js"></script>
 
         <div class="mb-8">
-            <h2 class="text-2xl font-bold tracking-tight text-[var(--text-primary)]">Analytics</h2>
+            <h2 class="text-2xl font-bold tracking-tight text-[var(--text-primary)]">Sales analytics</h2>
             <p class="text-[var(--text-muted)] text-sm mt-1">Revenue concentration and forecast trend vs break-even.</p>
         </div>
 
@@ -53,31 +51,54 @@
     </div>
 
     <script>
-        const chartMuted = '#888888';
-        const chartGrid = '#2A2A2A';
-        const chartText = '#EDEDED';
+        let topProductsChartInstance = null;
+        let trendChartInstance = null;
 
-        const chartDefaults = {
-            responsive: true,
-            maintainAspectRatio: false,
-            plugins: {
-                legend: {
-                    labels: { color: chartText, font: { family: 'Inter, sans-serif', size: 11 } }
-                }
-            },
-            scales: {
-                x: {
-                    ticks: { color: chartMuted, font: { family: 'Roboto Mono, monospace', size: 10 } },
-                    grid: { color: chartGrid }
+        function chartThemeColors() {
+            const cs = getComputedStyle(document.documentElement);
+            return {
+                muted: cs.getPropertyValue('--chart-muted').trim(),
+                grid: cs.getPropertyValue('--chart-grid').trim(),
+                text: cs.getPropertyValue('--chart-text').trim()
+            };
+        }
+
+        function buildChartDefaults() {
+            const c = chartThemeColors();
+            return {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: {
+                        labels: { color: c.text, font: { family: 'Inter, sans-serif', size: 11 } }
+                    }
                 },
-                y: {
-                    ticks: { color: chartMuted, font: { family: 'Roboto Mono, monospace', size: 10 } },
-                    grid: { color: chartGrid }
+                scales: {
+                    x: {
+                        ticks: { color: c.muted, font: { family: 'Roboto Mono, monospace', size: 10 } },
+                        grid: { color: c.grid }
+                    },
+                    y: {
+                        ticks: { color: c.muted, font: { family: 'Roboto Mono, monospace', size: 10 } },
+                        grid: { color: c.grid }
+                    }
                 }
+            };
+        }
+
+        function destroyCharts() {
+            if (topProductsChartInstance) {
+                topProductsChartInstance.destroy();
+                topProductsChartInstance = null;
             }
-        };
+            if (trendChartInstance) {
+                trendChartInstance.destroy();
+                trendChartInstance = null;
+            }
+        }
 
         async function loadAnalytics() {
+            destroyCharts();
             const prodRes = await fetch('/api/analytics/top-products/1');
             const topProducts = await prodRes.json();
 
@@ -90,8 +111,9 @@
 
         function renderTopProductsChart(data) {
             const ctx = document.getElementById('topProductsChart').getContext('2d');
+            const chartDefaults = buildChartDefaults();
             const palette = ['#A14B14', '#2ECC71', '#818CF8', '#3B82F6', '#14B8A6'];
-            new Chart(ctx, {
+            topProductsChartInstance = new Chart(ctx, {
                 type: 'bar',
                 data: {
                     labels: data.map(d => d.name),
@@ -113,7 +135,8 @@
 
         function renderTrendChart(data) {
             const ctx = document.getElementById('trendChart').getContext('2d');
-            new Chart(ctx, {
+            const chartDefaults = buildChartDefaults();
+            trendChartInstance = new Chart(ctx, {
                 type: 'line',
                 data: {
                     labels: data.map(d => new Date(d.forecast_month).toLocaleDateString('en-GB', { month: 'short' })),
@@ -141,6 +164,9 @@
         }
 
         loadAnalytics();
+        window.addEventListener('themechange', function () {
+            loadAnalytics();
+        });
     </script>
 </body>
 </html>
