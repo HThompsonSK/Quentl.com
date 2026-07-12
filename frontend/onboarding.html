@@ -1,0 +1,563 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Quick setup — Quentl</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="global.css">
+    <script src="theme.js"></script>
+</head>
+<body class="p-10 font-sans min-h-screen" data-nav="onboarding">
+    <div class="max-w-3xl mx-auto">
+        <header class="site-header">
+            <div class="shrink-0">
+                <div class="site-brand">
+                    <a href="/sign-in.html" class="site-brand-logoLink" aria-label="Quentl — account">
+                        <span class="site-logo-text">Quentl</span>
+                    </a>
+                </div>
+            </div>
+            <div class="site-header-actions">
+                <nav id="site-nav" class="site-nav" aria-label="Main"></nav>
+                <button type="button" class="theme-toggle" data-theme-toggle aria-label="Toggle color scheme" title="Light / dark mode">
+                    <span class="theme-toggle__thumb" aria-hidden="true"></span>
+                </button>
+            </div>
+        </header>
+        <script src="site-nav.js"></script>
+
+        <div id="onbApiBanner" class="hidden mb-4 rounded-lg border border-[var(--border-subtle)] bg-[var(--surface-muted)] px-3 py-2 text-xs text-[var(--text-muted)] leading-relaxed" role="status"></div>
+
+        <div class="mb-8">
+            <p class="text-xs font-semibold uppercase tracking-[0.22em] text-[var(--text-muted)]">Company setup</p>
+            <h2 class="text-2xl font-bold tracking-tight text-[var(--text-primary)] mt-2">Quick setup</h2>
+            <p id="introText" class="text-[var(--text-muted)] text-sm mt-1"></p>
+        </div>
+
+        <p id="wizardErr" class="text-xs text-[var(--death-red)] mb-4 hidden"></p>
+
+        <div id="phaseMcq" class="surface-card p-6 border-t-2 border-t-[var(--accent-orange)]">
+            <p id="stepProgress" class="text-xs font-semibold text-[var(--text-muted)] uppercase tracking-widest mb-4"></p>
+            <fieldset id="stepFieldset" class="border-0 p-0 m-0">
+                <legend id="stepTitle" class="text-base font-semibold text-[var(--text-primary)] mb-4 w-full"></legend>
+                <div id="stepChoices" class="space-y-2"></div>
+            </fieldset>
+            <p id="stepErr" class="text-xs text-[var(--death-red)] mt-4 hidden"></p>
+            <div class="flex flex-wrap gap-3 mt-8">
+                <button type="button" id="backBtn" class="btn-primary text-sm py-2 px-4 hidden">Back</button>
+                <button type="button" id="nextBtn" class="btn-accent text-sm py-2 px-4">Next</button>
+            </div>
+        </div>
+
+        <div id="phaseAccounting" class="surface-card p-6 border-t-2 border-t-[var(--accent-orange)] hidden">
+            <p class="text-xs font-semibold text-[var(--text-muted)] uppercase tracking-widest mb-3">Connect accounting</p>
+            <p class="text-sm text-[var(--text-muted)] mb-4">Link <strong class="text-[var(--text-primary)]">Xero</strong> or <strong class="text-[var(--text-primary)]">QuickBooks Online</strong> so Quentl can pull accrual and cash actuals. You will sign in at your provider, then return here — we check every few seconds for a new connection.</p>
+            <p class="text-xs text-[var(--text-muted)] mb-4 font-mono opacity-90">Requires OAuth apps and <code class="text-xs bg-[var(--surface-muted)] px-1 rounded">APP_BASE_URL</code> on the server (see Settings for callback URLs).</p>
+            <div id="integrationStatusText" class="text-sm text-[var(--text-muted)] mb-4">Checking connection status…</div>
+            <div class="flex flex-wrap gap-3 mb-6">
+                <a class="btn-accent text-sm py-2 px-4" id="linkXero" href="#">Connect Xero</a>
+                <a class="btn-primary text-sm py-2 px-4" id="linkQbo" href="#">Connect QuickBooks</a>
+            </div>
+            <p id="accountingErr" class="text-xs text-[var(--death-red)] mb-4 hidden"></p>
+            <div class="flex flex-wrap gap-3">
+                <button type="button" id="backFromAccountingBtn" class="btn-primary text-sm py-2 px-4">Back</button>
+                <button type="button" id="skipAccountingBtn" class="btn-primary text-sm py-2 px-4">Skip for now</button>
+                <button type="button" id="continueAccountingBtn" class="btn-accent text-sm py-2 px-4" disabled>Continue</button>
+            </div>
+        </div>
+
+        <div id="phaseBank" class="surface-card p-6 border-t-2 border-t-[var(--border-subtle)] hidden">
+            <p class="text-xs font-semibold text-[var(--text-muted)] uppercase tracking-widest mb-3">Bank balance</p>
+            <p class="text-sm text-[var(--text-muted)] mb-4">Direct bank feeds are on our roadmap. For now you can keep cash up to date inside Quentl from your model or with help from our team. Choose what fits:</p>
+            <fieldset class="border-0 p-0 m-0 space-y-2 mb-6">
+                <label class="flex items-start gap-3 cursor-pointer rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-surface)] px-3 py-3 text-sm text-[var(--text-primary)]">
+                    <input type="radio" name="bankPref" value="notify" class="mt-1 shrink-0" checked>
+                    <span>Email me when bank linking is available</span>
+                </label>
+                <label class="flex items-start gap-3 cursor-pointer rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-surface)] px-3 py-3 text-sm text-[var(--text-primary)]">
+                    <input type="radio" name="bankPref" value="manual" class="mt-1 shrink-0">
+                    <span>I will enter or update cash manually in the app for now</span>
+                </label>
+            </fieldset>
+            <p id="bankErr" class="text-xs text-[var(--death-red)] mb-4 hidden"></p>
+            <div class="flex flex-wrap gap-3">
+                <button type="button" id="backFromBankBtn" class="btn-primary text-sm py-2 px-4">Back</button>
+                <button type="button" id="finishBtn" class="btn-accent text-sm py-2 px-4">Finish and open dashboard</button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        (function () {
+            var COMPANY_ID = 1;
+            var sessionId = null;
+            var returnPage = '/app/';
+            var stepIndex = 0;
+            var selections = {};
+            var wizardPhase = 'mcq';
+            var integrationPollTimer = null;
+
+            var STEPS = [
+                {
+                    id: 'business_type',
+                    title: 'What best describes your business?',
+                    choices: [
+                        { v: 'b2b_saas', label: 'B2B software or SaaS' },
+                        { v: 'ecom_consumer', label: 'E-commerce or consumer product' },
+                        { v: 'agency_services', label: 'Agency or professional services' },
+                        { v: 'other_hybrid', label: 'Other (retail, marketplace, hybrid, etc.)' }
+                    ]
+                },
+                {
+                    id: 'team_size',
+                    title: 'How large is your team today?',
+                    choices: [
+                        { v: 'solo', label: 'Just me' },
+                        { v: 's2_10', label: '2–10 people' },
+                        { v: 's11_50', label: '11–50 people' },
+                        { v: 's51p', label: '51 or more' }
+                    ]
+                },
+                {
+                    id: 'focus_first',
+                    title: 'What do you want to focus on first in Quentl?',
+                    choices: [
+                        { v: 'runway_burn', label: 'Cash runway and burn' },
+                        { v: 'revenue_hiring', label: 'Revenue plan and hiring' },
+                        { v: 'costs_margins', label: 'Operating costs and margins' },
+                        { v: 'board_investor', label: 'Board or investor reporting' }
+                    ]
+                },
+                {
+                    id: 'accounting_mcq',
+                    title: 'Where does your accounting data live today?',
+                    choices: [
+                        { v: 'none_yet', label: 'Not connected yet — I will use Settings later' },
+                        { v: 'xero', label: 'Xero' },
+                        { v: 'quickbooks', label: 'QuickBooks' },
+                        { v: 'other_tool', label: 'Another tool (Sage, Wave, spreadsheets, etc.)' }
+                    ]
+                },
+                {
+                    id: 'contact_pref',
+                    title: 'How would you like our team to follow up?',
+                    choices: [
+                        { v: 'email_ok', label: 'Email me with tips when relevant' },
+                        { v: 'call_request', label: 'I would like to book a short call' },
+                        { v: 'self_serve', label: 'Not now — I will explore the product first' }
+                    ]
+                }
+            ];
+
+            function qs(name) {
+                var m = new RegExp('[?&]' + name + '=([^&]*)').exec(window.location.search);
+                return m ? decodeURIComponent(m[1].replace(/\+/g, ' ')) : null;
+            }
+            var r = qs('return');
+            if (r) returnPage = r;
+
+            var apiBaseRaw = (typeof window.__API_BASE__ === 'string' ? window.__API_BASE__ : '') || (qs('api_base') || '');
+            var API_BASE = apiBaseRaw.replace(/\/$/, '');
+
+            function apiUrl(path) {
+                if (!path || path.charAt(0) !== '/') return path;
+                return API_BASE + path;
+            }
+
+            document.getElementById('linkXero').href = apiUrl('/api/integrations/xero/start?company_id=' + COMPANY_ID);
+            document.getElementById('linkQbo').href = apiUrl('/api/integrations/quickbooks/start?company_id=' + COMPANY_ID);
+
+            function docsTroubleshoot() {
+                var origin = window.location.origin || '';
+                return (
+                    'Check that this page is served from the same host and port as the FastAPI app (e.g. run npm run dev from the repo). ' +
+                    'Open ' + origin + '/docs in this browser and search for "onboarding"; if nothing appears, the API you are hitting is not this app or it is an old build.'
+                );
+            }
+
+            function withApiHint(msg) {
+                return (msg || '') + ' ' + docsTroubleshoot();
+            }
+
+            function showErr(el, msg) {
+                if (!el) return;
+                el.textContent = msg || '';
+                el.classList.toggle('hidden', !msg);
+            }
+
+            function jsonHeaders() {
+                return { 'Content-Type': 'application/json' };
+            }
+
+            async function readResponseDetail(res) {
+                var t = (await res.text()).trim();
+                return t || res.statusText || '';
+            }
+
+            async function checkHealthOptional() {
+                try {
+                    var health = await fetch(apiUrl('/api/onboarding/health'));
+                    if (!health.ok) {
+                        var t = await readResponseDetail(health);
+                        return {
+                            ok: false,
+                            message: 'GET /api/onboarding/health returned HTTP ' + health.status + '. ' + t + ' Continuing without this check.'
+                        };
+                    }
+                    var hj = await health.json();
+                    if (!hj.ok) {
+                        return {
+                            ok: false,
+                            message: (hj.detail || 'Onboarding health reported a problem.') + ' Continuing anyway.'
+                        };
+                    }
+                    return { ok: true };
+                } catch (e) {
+                    return {
+                        ok: false,
+                        message: 'Health request failed: ' + (e.message || String(e)) + ' Continuing anyway.'
+                    };
+                }
+            }
+
+            /** Prefer open-session; if 404 (older server), fall back to sessions/latest. Same JSON shape. */
+            async function fetchLatestSessionOut() {
+                var openRes = await fetch(apiUrl('/api/onboarding/open-session?company_id=' + COMPANY_ID));
+                if (openRes.ok) return openRes;
+                if (openRes.status === 404) {
+                    return fetch(apiUrl('/api/onboarding/sessions/latest?company_id=' + COMPANY_ID));
+                }
+                return openRes;
+            }
+
+            async function createSessionPost() {
+                var res = await fetch(apiUrl('/api/onboarding/sessions'), {
+                    method: 'POST',
+                    headers: jsonHeaders(),
+                    body: JSON.stringify({ company_id: COMPANY_ID })
+                });
+                if (!res.ok) return { ok: false, res: res };
+                var j = await res.json();
+                sessionId = j.id;
+                return { ok: true };
+            }
+
+            async function ensureSession() {
+                var latest = await fetchLatestSessionOut();
+                if (latest.ok) {
+                    var lj = await latest.json();
+                    if (lj.session && lj.session.id) {
+                        sessionId = lj.session.id;
+                        return;
+                    }
+                    var created = await createSessionPost();
+                    if (created.ok) return;
+                    var sb = await readResponseDetail(created.res);
+                    throw new Error(withApiHint('Could not start session (HTTP ' + created.res.status + '). ' + sb));
+                }
+                if (latest.status === 404) {
+                    var created404 = await createSessionPost();
+                    if (created404.ok) return;
+                    var listErr = await readResponseDetail(latest);
+                    var postErr = await readResponseDetail(created404.res);
+                    throw new Error(withApiHint(
+                        'Onboarding list routes returned 404 and creating a session failed (HTTP ' + created404.res.status + '). ' +
+                        'POST detail: ' + postErr + ' — GET detail: ' + listErr +
+                        ' If both keep failing, the running server may not include onboarding routes (restart after git pull) or migration 002 is not applied.'
+                    ));
+                }
+                var body = await readResponseDetail(latest);
+                throw new Error(withApiHint('Could not load session (HTTP ' + latest.status + '). ' + body));
+            }
+
+            function setIntro() {
+                var el = document.getElementById('introText');
+                if (wizardPhase === 'mcq') {
+                    el.innerHTML = 'Pick the option that fits best for each question (no typing). Next you can connect accounting, then we will note your bank-balance preference before opening the workspace. Already have an account? <a href="/sign-in.html" class="text-[var(--accent-orange)] hover:underline">Sign in</a>.';
+                } else if (wizardPhase === 'accounting') {
+                    el.textContent = 'Connect your ledger so Quentl can read invoices and payments. You can skip and do this later in Settings.';
+                } else if (wizardPhase === 'bank') {
+                    el.textContent = 'Tell us how you want to handle bank balances for now.';
+                }
+            }
+
+            function showPhaseMcq() {
+                wizardPhase = 'mcq';
+                document.getElementById('phaseMcq').classList.remove('hidden');
+                document.getElementById('phaseAccounting').classList.add('hidden');
+                document.getElementById('phaseBank').classList.add('hidden');
+                setIntro();
+            }
+
+            function showPhaseAccounting() {
+                wizardPhase = 'accounting';
+                document.getElementById('phaseMcq').classList.add('hidden');
+                document.getElementById('phaseAccounting').classList.remove('hidden');
+                document.getElementById('phaseBank').classList.add('hidden');
+                setIntro();
+                showErr(document.getElementById('accountingErr'), '');
+                startIntegrationPoll();
+            }
+
+            function showPhaseBank() {
+                clearIntegrationPoll();
+                wizardPhase = 'bank';
+                document.getElementById('phaseMcq').classList.add('hidden');
+                document.getElementById('phaseAccounting').classList.add('hidden');
+                document.getElementById('phaseBank').classList.remove('hidden');
+                setIntro();
+                showErr(document.getElementById('bankErr'), '');
+            }
+
+            function clearIntegrationPoll() {
+                if (integrationPollTimer) {
+                    clearInterval(integrationPollTimer);
+                    integrationPollTimer = null;
+                }
+            }
+
+            function startIntegrationPoll() {
+                clearIntegrationPoll();
+                var tick = function () { refreshIntegrationStatus(); };
+                tick();
+                integrationPollTimer = setInterval(tick, 2500);
+            }
+
+            async function refreshIntegrationStatus() {
+                var statusEl = document.getElementById('integrationStatusText');
+                var contBtn = document.getElementById('continueAccountingBtn');
+                try {
+                    var res = await fetch(apiUrl('/api/integrations/status/' + COMPANY_ID));
+                    if (!res.ok) {
+                        statusEl.textContent = 'Could not read status (HTTP ' + res.status + '). You can still use Connect links or Skip.';
+                        contBtn.disabled = true;
+                        return;
+                    }
+                    var data = await res.json();
+                    var conns = data.connections || [];
+                    if (conns.length === 0) {
+                        statusEl.textContent = 'No accounting connection yet. Use Connect Xero or Connect QuickBooks, then wait a moment — or skip.';
+                        contBtn.disabled = true;
+                    } else {
+                        var names = conns.map(function (c) { return c.service_name || 'connected'; }).join(', ');
+                        statusEl.textContent = 'Connected: ' + names + '. Click Continue when you are ready.';
+                        contBtn.disabled = false;
+                    }
+                } catch (e) {
+                    statusEl.textContent = 'Status check failed. You can still connect or skip.';
+                    contBtn.disabled = true;
+                }
+            }
+
+            function renderStep() {
+                var step = STEPS[stepIndex];
+                var errEl = document.getElementById('stepErr');
+                showErr(errEl, '');
+                document.getElementById('stepProgress').textContent = 'Question ' + (stepIndex + 1) + ' of ' + STEPS.length;
+                document.getElementById('stepTitle').textContent = step.title;
+                var wrap = document.getElementById('stepChoices');
+                wrap.innerHTML = '';
+                var name = 'mcq_' + step.id;
+                var saved = selections[step.id];
+                step.choices.forEach(function (c, i) {
+                    var id = name + '_' + i;
+                    var row = document.createElement('label');
+                    row.className = 'flex items-start gap-3 cursor-pointer rounded-lg border border-[var(--border-subtle)] bg-[var(--bg-surface)] px-3 py-3 text-sm text-[var(--text-primary)] hover:border-[var(--accent-orange)]';
+                    var input = document.createElement('input');
+                    input.type = 'radio';
+                    input.name = name;
+                    input.value = c.v;
+                    input.id = id;
+                    input.className = 'mt-1 shrink-0 rounded-full border-[var(--border-subtle)]';
+                    if (saved && saved.v === c.v) input.checked = true;
+                    var span = document.createElement('span');
+                    span.textContent = c.label;
+                    row.appendChild(input);
+                    row.appendChild(span);
+                    wrap.appendChild(row);
+                });
+                document.getElementById('backBtn').classList.toggle('hidden', stepIndex === 0);
+                var nextBtn = document.getElementById('nextBtn');
+                nextBtn.textContent = stepIndex === STEPS.length - 1 ? 'Continue' : 'Next';
+            }
+
+            function readSelection() {
+                var step = STEPS[stepIndex];
+                var name = 'mcq_' + step.id;
+                var el = document.querySelector('input[name="' + name + '"]:checked');
+                if (!el) return null;
+                var v = el.value;
+                var label = '';
+                step.choices.forEach(function (c) {
+                    if (c.v === v) label = c.label;
+                });
+                return { v: v, label: label };
+            }
+
+            document.getElementById('nextBtn').addEventListener('click', async function () {
+                var errEl = document.getElementById('stepErr');
+                var sel = readSelection();
+                if (!sel) {
+                    showErr(errEl, 'Please choose one option before continuing.');
+                    return;
+                }
+                var step = STEPS[stepIndex];
+                selections[step.id] = sel;
+                if (stepIndex < STEPS.length - 1) {
+                    stepIndex += 1;
+                    renderStep();
+                    return;
+                }
+                showErr(errEl, '');
+                var nextBtn = document.getElementById('nextBtn');
+                nextBtn.disabled = true;
+                try {
+                    await ensureSession();
+                    var pr = await fetch(apiUrl('/api/onboarding/profiles'), {
+                        method: 'PUT',
+                        headers: jsonHeaders(),
+                        body: JSON.stringify({
+                            company_id: COMPANY_ID,
+                            merge: true,
+                            data: { setup_mcq: selections }
+                        })
+                    });
+                    if (!pr.ok) {
+                        throw new Error('Profile save failed (HTTP ' + pr.status + '). ' + (await readResponseDetail(pr)));
+                    }
+                    showPhaseAccounting();
+                } catch (e) {
+                    showErr(errEl, e.message || String(e));
+                    nextBtn.disabled = false;
+                }
+            });
+
+            document.getElementById('backBtn').addEventListener('click', function () {
+                if (stepIndex > 0) {
+                    stepIndex -= 1;
+                    renderStep();
+                }
+            });
+
+            document.getElementById('backFromAccountingBtn').addEventListener('click', function () {
+                clearIntegrationPoll();
+                showPhaseMcq();
+                stepIndex = STEPS.length - 1;
+                renderStep();
+            });
+
+            document.getElementById('skipAccountingBtn').addEventListener('click', async function () {
+                var errEl = document.getElementById('accountingErr');
+                showErr(errEl, '');
+                try {
+                    await ensureSession();
+                    var pr = await fetch(apiUrl('/api/onboarding/profiles'), {
+                        method: 'PUT',
+                        headers: jsonHeaders(),
+                        body: JSON.stringify({
+                            company_id: COMPANY_ID,
+                            merge: true,
+                            data: { setup_accounting: { skipped: true } }
+                        })
+                    });
+                    if (!pr.ok) throw new Error(await readResponseDetail(pr));
+                    showPhaseBank();
+                } catch (e) {
+                    showErr(errEl, e.message || String(e));
+                }
+            });
+
+            document.getElementById('continueAccountingBtn').addEventListener('click', async function () {
+                var errEl = document.getElementById('accountingErr');
+                showErr(errEl, '');
+                try {
+                    var res = await fetch(apiUrl('/api/integrations/status/' + COMPANY_ID));
+                    if (!res.ok) throw new Error('Status ' + res.status);
+                    var data = await res.json();
+                    var conns = data.connections || [];
+                    if (conns.length === 0) return;
+                    await ensureSession();
+                    var pr = await fetch(apiUrl('/api/onboarding/profiles'), {
+                        method: 'PUT',
+                        headers: jsonHeaders(),
+                        body: JSON.stringify({
+                            company_id: COMPANY_ID,
+                            merge: true,
+                            data: {
+                                setup_accounting: {
+                                    skipped: false,
+                                    services: conns.map(function (c) { return c.service_name; })
+                                }
+                            }
+                        })
+                    });
+                    if (!pr.ok) throw new Error(await readResponseDetail(pr));
+                    showPhaseBank();
+                } catch (e) {
+                    showErr(errEl, e.message || String(e));
+                }
+            });
+
+            document.getElementById('backFromBankBtn').addEventListener('click', function () {
+                showPhaseAccounting();
+            });
+
+            document.getElementById('finishBtn').addEventListener('click', async function () {
+                var errEl = document.getElementById('bankErr');
+                showErr(errEl, '');
+                var prefEl = document.querySelector('input[name="bankPref"]:checked');
+                var pref = prefEl ? prefEl.value : 'manual';
+                var btn = document.getElementById('finishBtn');
+                btn.disabled = true;
+                try {
+                    await ensureSession();
+                    var pr = await fetch(apiUrl('/api/onboarding/profiles'), {
+                        method: 'PUT',
+                        headers: jsonHeaders(),
+                        body: JSON.stringify({
+                            company_id: COMPANY_ID,
+                            merge: true,
+                            data: {
+                                setup_bank: {
+                                    preference: pref,
+                                    roadmap: pref === 'notify' ? 'notify_when_available' : 'manual_cash_for_now'
+                                }
+                            }
+                        })
+                    });
+                    if (!pr.ok) throw new Error(await readResponseDetail(pr));
+                    var done = await fetch(apiUrl('/api/onboarding/sessions/' + sessionId + '/complete'), {
+                        method: 'POST',
+                        headers: jsonHeaders(),
+                        body: JSON.stringify({ company_id: COMPANY_ID })
+                    });
+                    if (!done.ok) throw new Error('Complete failed (HTTP ' + done.status + '). ' + (await readResponseDetail(done)));
+                    window.location.href = returnPage;
+                } catch (e) {
+                    showErr(errEl, e.message || String(e));
+                    btn.disabled = false;
+                }
+            });
+
+            (async function init() {
+                var banner = document.getElementById('onbApiBanner');
+                try {
+                    var hw = await checkHealthOptional();
+                    if (!hw.ok && banner) {
+                        banner.textContent = hw.message + ' ' + docsTroubleshoot();
+                        banner.classList.remove('hidden');
+                    }
+                } catch (e) {
+                    if (banner) {
+                        banner.textContent = String(e.message || e);
+                        banner.classList.remove('hidden');
+                    }
+                }
+                showPhaseMcq();
+                renderStep();
+            })();
+        })();
+    </script>
+</body>
+</html>

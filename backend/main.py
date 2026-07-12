@@ -1,6 +1,7 @@
 import os
 from fastapi import FastAPI, HTTPException, Depends
 from fastapi.middleware.cors import CORSMiddleware
+from fastapi.responses import FileResponse, RedirectResponse
 from fastapi.staticfiles import StaticFiles
 from starlette.middleware.base import BaseHTTPMiddleware
 from starlette.requests import Request
@@ -12,10 +13,12 @@ from decimal import Decimal
 from db import get_db
 from integrations.router import register_integration_routes
 from onboarding_sketch import register_onboarding_sketch_routes
+from ask import register_ask_routes
 
 app = FastAPI()
 
-# Enable CORS
+# Served by StaticFiles mount below — used for HTML alias redirects.
+frontend_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "../frontend"))
 app.add_middleware(
     CORSMiddleware,
     allow_origins=["*"],
@@ -44,6 +47,7 @@ app.add_middleware(NoCacheHtmlMiddleware)
 
 register_integration_routes(app)
 register_onboarding_sketch_routes(app)
+register_ask_routes(app)
 
 # --- PYDANTIC MODELS ---
 
@@ -1005,7 +1009,25 @@ def get_projects(company_id: int, conn=Depends(get_db)):
 
 
 # --- STATIC FILES (FRONTEND) ---
-frontend_path = os.path.abspath(os.path.join(os.path.dirname(__file__), "../frontend"))
+# Must run before the catch-all StaticFiles mount so `/app/*.html` is not eaten by static 404s.
+@app.api_route("/app/{stub}.html", methods=["GET", "HEAD"])
+async def app_prefixed_html_alias(stub: str):
+    """Serve dashboard at ``/app/index.html``; redirect other ``/app/*.html`` to root ``/*.html``.
+
+    Relative links from ``/app/`` resolve to ``/app/foo.html``; static HTML lives at ``/foo.html``.
+    """
+    filename = f"{stub}.html"
+    if stub == "index":
+        path = os.path.join(frontend_path, "app", "index.html")
+        if not os.path.isfile(path):
+            raise HTTPException(status_code=404, detail="Not Found")
+        return FileResponse(path, media_type="text/html")
+    candidate = os.path.join(frontend_path, filename)
+    if os.path.isfile(candidate):
+        return RedirectResponse(url=f"/{filename}", status_code=307)
+    raise HTTPException(status_code=404, detail="Not Found")
+
+
 app.mount("/", StaticFiles(directory=frontend_path, html=True), name="frontend")
 
 

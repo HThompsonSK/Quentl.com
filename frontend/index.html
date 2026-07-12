@@ -1,604 +1,583 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="en" class="marketing-landing">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Dashboard - Marmalade</title>
+    <title>Quentl — clarity for founders</title>
+    <meta name="description" content="Forecast, runway, and pipeline in one founder-grade workspace.">
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="global.css">
-    <script src="theme.js"></script>
-</head>
-<body class="p-10 font-sans min-h-screen" data-nav="dashboard">
-    <div class="max-w-6xl mx-auto">
+    <style>
+        /*
+         * Gradual light → dark: JS sets --theme-t from 0 (top) to 1 (fully scrolled in).
+         * Blends light/dark tokens via color-mix (see global.css for accent traffic-light colors).
+         */
+        html.marketing-landing {
+            --theme-t: 0;
+            --ml-light-bg: #fafafa;
+            --ml-dark-bg: #0a0a0a;
+            --ml-light-surface: #ffffff;
+            --ml-dark-surface: #1a1a1a;
+            --ml-light-border: #e4e4e7;
+            --ml-dark-border: #2a2a2a;
+            --ml-light-surface-hover: #f4f4f5;
+            --ml-dark-surface-hover: #242424;
+            --ml-light-text: #18181b;
+            --ml-dark-text: #ededed;
+            --ml-light-muted: #71717a;
+            --ml-dark-muted: #888888;
+            --ml-light-wordmark: #8b3a0e;
+            --ml-dark-wordmark: #a14004;
+            --ml-light-wordmark-hover: #c46328;
+            --ml-dark-wordmark-hover: #e8a05d;
 
-        <header class="site-header">
+            --bg-dark: color-mix(in oklch, var(--ml-light-bg) calc((1 - var(--theme-t)) * 100%), var(--ml-dark-bg) calc(var(--theme-t) * 100%));
+            --bg-surface: color-mix(in oklch, var(--ml-light-surface) calc((1 - var(--theme-t)) * 100%), var(--ml-dark-surface) calc(var(--theme-t) * 100%));
+            --border-subtle: color-mix(in oklch, var(--ml-light-border) calc((1 - var(--theme-t)) * 100%), var(--ml-dark-border) calc(var(--theme-t) * 100%));
+            --surface-hover: color-mix(in oklch, var(--ml-light-surface-hover) calc((1 - var(--theme-t)) * 100%), var(--ml-dark-surface-hover) calc(var(--theme-t) * 100%));
+            --text-primary: color-mix(in oklch, var(--ml-light-text) calc((1 - var(--theme-t)) * 100%), var(--ml-dark-text) calc(var(--theme-t) * 100%));
+            --text-muted: color-mix(in oklch, var(--ml-light-muted) calc((1 - var(--theme-t)) * 100%), var(--ml-dark-muted) calc(var(--theme-t) * 100%));
+            --logo-wordmark-color: color-mix(in oklch, var(--ml-light-wordmark) calc((1 - var(--theme-t)) * 100%), var(--ml-dark-wordmark) calc(var(--theme-t) * 100%));
+            --logo-wordmark-color-hover: color-mix(in oklch, var(--ml-light-wordmark-hover) calc((1 - var(--theme-t)) * 100%), var(--ml-dark-wordmark-hover) calc(var(--theme-t) * 100%));
+            --chart-muted: color-mix(in oklch, var(--ml-light-muted) calc((1 - var(--theme-t)) * 100%), var(--ml-dark-muted) calc(var(--theme-t) * 100%));
+            --chart-grid: color-mix(in oklch, var(--ml-light-border) calc((1 - var(--theme-t)) * 100%), var(--ml-dark-border) calc(var(--theme-t) * 100%));
+            --chart-text: color-mix(in oklch, var(--ml-light-text) calc((1 - var(--theme-t)) * 100%), var(--ml-dark-text) calc(var(--theme-t) * 100%));
+        }
+
+        .marketing-header {
+            transition: border-color 0.12s ease;
+        }
+        .marketing-header .site-brand .site-logo-text {
+            font-size: clamp(1.85rem, 4vw, 2.65rem) !important;
+        }
+        /* Hero — centred wordmark + tagline (scoped so header wordmark stays compact) */
+        #marketing-hero .hero-center-stage {
+            text-align: center;
+        }
+        #marketing-hero .hero-center-wordmark-link {
+            display: inline-block;
+            line-height: 0.92;
+            text-decoration: none !important;
+            color: var(--logo-wordmark-color) !important;
+            transition: color 0.2s ease, opacity 0.2s ease;
+        }
+        #marketing-hero .hero-center-wordmark-link:hover {
+            color: var(--logo-wordmark-color-hover) !important;
+        }
+        #marketing-hero .hero-center-wordmark-link:focus-visible {
+            outline: 2px solid var(--accent-orange);
+            outline-offset: 6px;
+            border-radius: 4px;
+        }
+        #marketing-hero .hero-center-wordmark-text {
+            font-family: var(--font-brand) !important;
+            font-size: clamp(3.25rem, 12vw + 1.25rem, 8.75rem) !important;
+            font-weight: var(--logo-wordmark-weight) !important;
+            font-stretch: var(--logo-wordmark-stretch);
+            letter-spacing: var(--logo-wordmark-tracking) !important;
+            line-height: 0.92 !important;
+            display: block;
+            color: inherit !important;
+        }
+        #marketing-hero .hero-center-tagline {
+            display: block;
+            margin-top: clamp(1rem, 3vw, 1.75rem);
+            font-size: clamp(1.35rem, 3.8vw, 2.75rem);
+            font-weight: 600;
+            letter-spacing: -0.04em;
+            line-height: 1.12;
+            color: var(--text-primary);
+        }
+        #marketing-hero .hero-center-lede {
+            margin-left: auto;
+            margin-right: auto;
+            margin-top: clamp(1.25rem, 3.5vw, 2rem);
+            max-width: 40rem;
+            font-size: clamp(0.9375rem, 1.9vw, 1.125rem);
+            line-height: 1.65;
+            letter-spacing: -0.015em;
+            color: var(--text-muted);
+        }
+        #marketing-hero .marketing-hero-bg {
+            opacity: 0.1;
+            background-image:
+                radial-gradient(ellipse 70% 55% at 12% 20%, color-mix(in oklch, var(--accent-orange) 55%, transparent), transparent 58%),
+                radial-gradient(ellipse 50% 45% at 88% 80%, color-mix(in oklch, #c9a227 35%, transparent), transparent 55%),
+                radial-gradient(ellipse 36% 32% at 50% 0%, color-mix(in oklch, var(--runway-green) 28%, transparent), transparent 70%);
+        }
+        .marketing-about-band {
+            background: linear-gradient(
+                180deg,
+                transparent 0%,
+                color-mix(in oklch, var(--accent-orange) 7%, transparent) 42%,
+                transparent 100%
+            );
+        }
+        .integration-logo-card {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            padding: 1rem 1.35rem;
+            min-height: 4.25rem;
+            min-width: 8rem;
+            border-radius: 0.875rem;
+            border: 1px solid #e4e4e7;
+            background: #ffffff;
+            transition: border-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+        }
+        .integration-logo-card:hover {
+            border-color: color-mix(in oklch, var(--accent-orange) 55%, #e4e4e7);
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(0, 0, 0, calc(0.06 + var(--theme-t) * 0.12));
+        }
+        .integration-logo-img {
+            height: clamp(28px, 4vw, 38px);
+            width: auto;
+            max-width: 128px;
+            object-fit: contain;
+        }
+        .grid-bg {
+            background-image:
+                linear-gradient(color-mix(in oklch, var(--border-subtle) 55%, transparent) 1px, transparent 1px),
+                linear-gradient(90deg, color-mix(in oklch, var(--border-subtle) 55%, transparent) 1px, transparent 1px);
+            background-size: 48px 48px;
+        }
+        /* Hero — cashflow canvas + KPI strip */
+        .hero-cf-card {
+            border-radius: 1.25rem;
+            border: 1px solid var(--border-subtle);
+            background: color-mix(in oklch, var(--bg-surface) 92%, transparent);
+            box-shadow:
+                0 1px 0 rgba(255, 255, 255, calc((1 - var(--theme-t)) * 0.06)),
+                0 24px 48px rgba(0, 0, 0, calc(0.05 + var(--theme-t) * 0.14));
+            backdrop-filter: blur(12px);
+            -webkit-backdrop-filter: blur(12px);
+            overflow: hidden;
+            transition: border-color 0.2s ease, box-shadow 0.2s ease;
+        }
+        .hero-cf-card:hover {
+            border-color: color-mix(in oklch, var(--accent-orange) 35%, var(--border-subtle));
+        }
+        .hero-cf-period {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.35rem;
+            border-radius: 999px;
+            border: 1px solid var(--border-subtle);
+            background: color-mix(in oklch, var(--bg-dark) 40%, var(--bg-surface));
+            padding: 0.35rem 0.85rem;
+            font-size: 0.6875rem;
+            font-weight: 600;
+            letter-spacing: 0.06em;
+            color: var(--text-muted);
+        }
+        .hero-cf-metric-value {
+            font-size: clamp(1.75rem, 3.5vw, 2.35rem);
+            font-weight: 600;
+            letter-spacing: -0.03em;
+            font-variant-numeric: tabular-nums;
+            color: var(--text-primary);
+        }
+        .hero-cf-metric-hint {
+            font-size: 0.8125rem;
+            color: var(--text-muted);
+            margin-top: 0.25rem;
+            letter-spacing: -0.01em;
+        }
+        #marketing-hero .hero-cf-section-label {
+            font-size: 0.6875rem;
+            font-weight: 600;
+            letter-spacing: 0.16em;
+            text-transform: uppercase;
+            color: var(--text-muted);
+        }
+        .hero-cf-svg-wrap {
+            position: relative;
+            margin-top: 1.25rem;
+            border-radius: 0.875rem;
+            border: 1px solid color-mix(in oklch, var(--border-subtle) 80%, transparent);
+            background: color-mix(in oklch, var(--bg-dark) 35%, transparent);
+            padding: 0.75rem 0.5rem 0.5rem 0.25rem;
+        }
+        @media (min-width: 640px) {
+            .hero-cf-svg-wrap {
+                padding: 1rem 0.75rem 0.65rem 0.35rem;
+            }
+        }
+        .hero-cf-svg {
+            width: 100%;
+            height: clamp(168px, 26vw, 220px);
+            display: block;
+        }
+        .hero-kpi-tile {
+            border-radius: 1rem;
+            border: 1px solid var(--border-subtle);
+            background: color-mix(in oklch, var(--bg-surface) 88%, transparent);
+            padding: 1rem 1.1rem;
+            transition: border-color 0.18s ease, background 0.18s ease;
+        }
+        .hero-kpi-tile:hover {
+            border-color: color-mix(in oklch, var(--accent-orange) 28%, var(--border-subtle));
+            background: color-mix(in oklch, var(--bg-surface) 96%, transparent);
+        }
+        .hero-kpi-label {
+            font-size: 0.625rem;
+            font-weight: 600;
+            letter-spacing: 0.14em;
+            text-transform: uppercase;
+            color: var(--text-muted);
+        }
+        .hero-kpi-value {
+            margin-top: 0.5rem;
+            font-size: 1.25rem;
+            font-weight: 600;
+            letter-spacing: -0.03em;
+            font-variant-numeric: tabular-nums;
+            color: var(--text-primary);
+        }
+        .hero-kpi-note {
+            margin-top: 0.35rem;
+            font-size: 0.6875rem;
+            color: var(--text-muted);
+            letter-spacing: -0.01em;
+            line-height: 1.35;
+        }
+        .hero-kpi-dot {
+            display: inline-block;
+            width: 6px;
+            height: 6px;
+            border-radius: 999px;
+            margin-right: 0.35rem;
+            vertical-align: 0.05em;
+            background: var(--accent-orange);
+        }
+        .hero-kpi-dot--green {
+            background: var(--runway-green);
+        }
+        @media (prefers-reduced-motion: reduce) {
+            html.marketing-landing {
+                scroll-behavior: auto;
+            }
+            .integration-logo-card:hover {
+                transform: none;
+            }
+        }
+    </style>
+</head>
+<body class="font-sans min-h-screen text-[var(--text-primary)] bg-[var(--bg-dark)] antialiased">
+
+    <header class="marketing-header border-b border-[var(--border-subtle)] bg-[var(--bg-dark)]/90 backdrop-blur-md sticky top-0 z-40">
+        <div class="max-w-6xl mx-auto px-6 py-4 flex items-center justify-between gap-6">
             <div class="shrink-0">
                 <div class="site-brand">
-                    <a href="index.html" class="site-brand-logoLink" aria-label="Marmalade home">
-                        <span class="site-logo-text">Marmalade</span>
+                    <a href="/" class="site-brand-logoLink" aria-label="Quentl home">
+                        <span class="site-logo-text">Quentl</span>
                     </a>
                 </div>
             </div>
-            <div class="site-header-actions">
-            <nav id="site-nav" class="site-nav" aria-label="Main"></nav>
-            <button type="button" class="theme-toggle" data-theme-toggle aria-label="Toggle color scheme" title="Light / dark mode">
-                <span class="theme-toggle__thumb" aria-hidden="true"></span>
-            </button>
-            </div>
-        </header>
-        <script src="site-nav.js"></script>
-
-        <div class="mb-8 flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
-            <div>
-                <h2 class="text-2xl font-bold tracking-tight text-[var(--text-primary)]">Dashboard</h2>
-                <p class="text-[var(--text-muted)] text-sm mt-1">Two tiles per row. Drag <span class="font-mono text-[var(--text-primary)]">⠿</span> to reorder. A lone tile spans the full row; drop on its left or right half to place before or beside it. Layout is saved in this browser.</p>
-            </div>
-            <div class="flex flex-wrap items-center gap-2">
-                <label class="sr-only" for="addTileType">Tile type</label>
-                <select id="addTileType" class="text-sm bg-[var(--bg-surface)] border border-[var(--border-subtle)] text-[var(--text-primary)] rounded-md px-3 py-2 font-mono">
-                </select>
-                <button type="button" id="addTileBtn" class="btn-accent text-sm">Add tile</button>
-                <button type="button" id="resetDashboardBtn" class="btn-primary text-sm">Reset layout</button>
-            </div>
+            <nav class="flex flex-wrap items-center justify-end gap-2 sm:gap-3 text-sm" aria-label="Primary">
+                <a href="#charts" class="text-[var(--text-muted)] hover:text-[var(--text-primary)] transition hidden sm:inline">Product</a>
+                <a href="#integrations" class="text-[var(--text-muted)] hover:text-[var(--text-primary)] transition hidden sm:inline">Integrations</a>
+                <a href="/onboarding.html?return=/app/" class="btn-accent text-sm py-2 px-3 sm:px-4 whitespace-nowrap">Try Quentl free</a>
+                <a href="/sign-in.html" class="btn-primary text-sm py-2 px-3 sm:px-4 whitespace-nowrap">Sign in</a>
+            </nav>
         </div>
+    </header>
 
-        <div id="dashboard-grid" class="flex flex-col gap-6">
-        </div>
-    </div>
+    <main>
+        <section id="marketing-hero" class="relative overflow-hidden border-b border-[var(--border-subtle)]">
+            <div class="marketing-hero-bg absolute inset-0 pointer-events-none" aria-hidden="true"></div>
+            <div class="max-w-6xl mx-auto px-6 py-16 md:py-24 md:pb-24 relative">
+                <div class="hero-center-stage mb-12 md:mb-16">
+                    <h1 class="m-0 p-0 font-sans font-normal">
+                        <a href="/" class="hero-center-wordmark-link" aria-label="Quentl home">
+                            <span class="hero-center-wordmark-text">Quentl</span>
+                        </a>
+                        <span class="hero-center-tagline">Made by founders, for founders</span>
+                    </h1>
+                    <p class="hero-center-lede">
+                        Quentl is straightforward financial software for small teams who want a clearer read on cash, burn, and revenue. It is a live model that tracks performance over time, surfaces what changed, and helps you stay financially on track — without living inside a spreadsheet.
+                    </p>
+                    <div class="flex flex-wrap items-center justify-center gap-3 mt-8 md:mt-10">
+                        <a href="/onboarding.html?return=/app/" class="btn-accent text-sm md:text-base px-7 py-3 inline-flex items-center justify-center font-medium">Try Quentl free</a>
+                        <a href="/sign-in.html" class="btn-primary text-sm md:text-base px-6 py-3 inline-flex items-center justify-center font-medium">Sign in</a>
+                    </div>
+                </div>
 
-    <div id="detailModal" class="modal-backdrop fixed inset-0 hidden flex items-center justify-center z-50">
-        <div class="modal-surface w-full max-w-lg overflow-hidden">
-            <div class="px-6 py-5 border-b border-[var(--border-subtle)] flex justify-between items-center bg-[var(--bg-elevated)]">
-                <h3 class="text-lg font-semibold text-[var(--text-primary)] tracking-tight" id="modalTitle">Month Details</h3>
-                <button onclick="closeModal()" class="text-[var(--text-muted)] hover:text-[var(--death-red)] font-mono text-xl transition">&times;</button>
+                <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 md:gap-5 lg:gap-6 items-stretch">
+                    <article class="hero-cf-card p-6 md:p-8 lg:col-span-8 min-w-0" aria-labelledby="hero-cf-heading">
+                        <div class="flex flex-wrap items-start justify-between gap-4">
+                            <div>
+                                <h2 id="hero-cf-heading" class="hero-cf-section-label mb-2">Cash balance</h2>
+                                <p class="hero-cf-metric-value">£498,350</p>
+                                <p class="hero-cf-metric-hint">Sample trajectory · operating account</p>
+                            </div>
+                            <span class="hero-cf-period shrink-0">Last 7 months</span>
+                        </div>
+                        <div class="hero-cf-svg-wrap">
+                            <svg class="hero-cf-svg" viewBox="0 0 440 168" preserveAspectRatio="xMidYMid meet" role="img" aria-labelledby="heroCfSvgTitle heroCfSvgDesc">
+                                <title id="heroCfSvgTitle">Illustrative cash balance trend</title>
+                                <desc id="heroCfSvgDesc">Line rises from roughly three hundred thousand pounds to just under five hundred thousand over seven months.</desc>
+                                <defs>
+                                    <linearGradient id="heroCfLineGrad" x1="52" y1="0" x2="400" y2="0" gradientUnits="userSpaceOnUse">
+                                        <stop offset="0%" stop-color="#c9a227"/>
+                                        <stop offset="45%" stop-color="#A14B14"/>
+                                        <stop offset="100%" stop-color="#2ECC71"/>
+                                    </linearGradient>
+                                    <linearGradient id="heroCfAreaGrad" x1="0" y1="0" x2="0" y2="1">
+                                        <stop offset="0%" stop-color="#A14B14" stop-opacity="0.22"/>
+                                        <stop offset="55%" stop-color="#c9a227" stop-opacity="0.08"/>
+                                        <stop offset="100%" stop-color="#A14B14" stop-opacity="0"/>
+                                    </linearGradient>
+                                </defs>
+                                <text x="4" y="40" fill="var(--chart-muted)" font-size="10" font-family="ui-monospace, monospace">500K</text>
+                                <text x="4" y="64" fill="var(--chart-muted)" font-size="10" font-family="ui-monospace, monospace">400K</text>
+                                <text x="4" y="88" fill="var(--chart-muted)" font-size="10" font-family="ui-monospace, monospace">350K</text>
+                                <text x="4" y="112" fill="var(--chart-muted)" font-size="10" font-family="ui-monospace, monospace">300K</text>
+                                <line x1="48" y1="36" x2="400" y2="36" stroke="var(--chart-grid)" stroke-width="1" opacity="0.65"/>
+                                <line x1="48" y1="60" x2="400" y2="60" stroke="var(--chart-grid)" stroke-width="1" opacity="0.65"/>
+                                <line x1="48" y1="84" x2="400" y2="84" stroke="var(--chart-grid)" stroke-width="1" opacity="0.65"/>
+                                <line x1="48" y1="108" x2="400" y2="108" stroke="var(--chart-grid)" stroke-width="1" opacity="0.65"/>
+                                <path d="M 52 102 C 92 98 108 94 136 88 C 168 81 188 76 216 70 C 248 63 268 58 296 54 C 328 49 352 46 376 44 C 388 43 394 42 400 41 L 400 124 L 52 124 Z" fill="url(#heroCfAreaGrad)"/>
+                                <path d="M 52 102 C 92 98 108 94 136 88 C 168 81 188 76 216 70 C 248 63 268 58 296 54 C 328 49 352 46 376 44 C 388 43 394 42 400 41" fill="none" stroke="url(#heroCfLineGrad)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
+                                <circle cx="52" cy="102" r="4" fill="#c9a227"/>
+                                <circle cx="136" cy="88" r="3.5" fill="#A14B14"/>
+                                <circle cx="216" cy="70" r="3.5" fill="#A14B14"/>
+                                <circle cx="296" cy="54" r="3.5" fill="#A14B14"/>
+                                <circle cx="376" cy="44" r="3.5" fill="#c9a227"/>
+                                <circle cx="400" cy="41" r="5" fill="#2ECC71"/>
+                                <g transform="translate(318, 10)">
+                                    <rect x="0" y="0" width="108" height="26" rx="13" fill="rgba(46, 204, 113, 0.14)" stroke="rgba(46, 204, 113, 0.35)" stroke-width="1"/>
+                                    <text x="54" y="17" text-anchor="middle" fill="var(--chart-text)" font-size="11" font-weight="600" font-family="ui-sans-serif, system-ui, sans-serif">£498K</text>
+                                </g>
+                                <text x="64" y="152" fill="var(--chart-muted)" font-size="10" font-family="ui-monospace, monospace" text-anchor="middle">May</text>
+                                <text x="120" y="152" fill="var(--chart-muted)" font-size="10" font-family="ui-monospace, monospace" text-anchor="middle">Jun</text>
+                                <text x="176" y="152" fill="var(--chart-muted)" font-size="10" font-family="ui-monospace, monospace" text-anchor="middle">Jul</text>
+                                <text x="232" y="152" fill="var(--chart-muted)" font-size="10" font-family="ui-monospace, monospace" text-anchor="middle">Aug</text>
+                                <text x="288" y="152" fill="var(--chart-muted)" font-size="10" font-family="ui-monospace, monospace" text-anchor="middle">Sep</text>
+                                <text x="344" y="152" fill="var(--chart-muted)" font-size="10" font-family="ui-monospace, monospace" text-anchor="middle">Oct</text>
+                                <text x="392" y="152" fill="var(--chart-text)" font-size="10" font-weight="600" font-family="ui-monospace, monospace" text-anchor="middle">Nov</text>
+                            </svg>
+                        </div>
+                    </article>
+
+                    <div class="lg:col-span-4 grid grid-cols-2 gap-3 md:gap-4 min-w-0" aria-label="Sample financial metrics">
+                        <div class="hero-kpi-tile">
+                            <p class="hero-kpi-label">Runway</p>
+                            <p class="hero-kpi-value text-[var(--runway-green)]">14 mo</p>
+                            <p class="hero-kpi-note"><span class="hero-kpi-dot hero-kpi-dot--green" aria-hidden="true"></span>Healthy buffer</p>
+                        </div>
+                        <div class="hero-kpi-tile">
+                            <p class="hero-kpi-label">Net burn</p>
+                            <p class="hero-kpi-value">£82K</p>
+                            <p class="hero-kpi-note">Monthly operating</p>
+                        </div>
+                        <div class="hero-kpi-tile">
+                            <p class="hero-kpi-label">MRR</p>
+                            <p class="hero-kpi-value">£142K</p>
+                            <p class="hero-kpi-note">Recurring revenue</p>
+                        </div>
+                        <div class="hero-kpi-tile">
+                            <p class="hero-kpi-label">Net cashflow</p>
+                            <p class="hero-kpi-value text-[var(--accent-orange)]">+£62K</p>
+                            <p class="hero-kpi-note"><span class="hero-kpi-dot" aria-hidden="true"></span>Last month · sample</p>
+                        </div>
+                    </div>
+                </div>
             </div>
-            <div class="p-0">
-                <table class="w-full">
-                    <thead>
-                        <tr>
-                            <th class="pl-6">Product</th>
-                            <th class="text-right">Units</th>
-                            <th class="text-right">Revenue</th>
-                            <th class="text-center pr-6">Action</th>
-                        </tr>
-                    </thead>
-                    <tbody id="modalBody">
-                        </tbody>
-                </table>
-            </div>
-            <div class="bg-[var(--bg-elevated)] px-6 py-4 border-t border-[var(--border-subtle)] text-right">
-                <button onclick="closeModal()" class="btn-primary">Close Details</button>
-            </div>
+        </section>
+
+        <div id="scroll-dark-zone">
+            <section id="charts" class="relative border-b border-[var(--border-subtle)] grid-bg">
+                <div class="max-w-6xl mx-auto px-6 py-16 md:py-24">
+                    <div class="text-center max-w-2xl mx-auto mb-10 md:mb-14">
+                        <p class="text-xs font-semibold uppercase tracking-[0.22em] text-[var(--text-muted)]">Unit economics &amp; SaaS</p>
+                        <h2 class="mt-4 text-2xl sm:text-3xl font-semibold tracking-tight text-[var(--text-primary)] leading-snug">All the metrics you need, in one place.</h2>
+                        <p class="text-sm md:text-base text-[var(--text-muted)] mt-4 tracking-tight leading-relaxed">
+                            Quentl keeps your KPIs in sync with your forecast and monthly inputs — MRR through margin, CAC, NRR, churn, and payback update as the model moves, not when you remember to paste into a sheet.
+                        </p>
+                        <p class="text-sm md:text-base text-[var(--text-muted)] mt-3 tracking-tight leading-relaxed">
+                            Hook up accounting and commerce when you are ready; Quentl measures the lot automatically so you spend time on decisions, not reconciliation busywork.
+                        </p>
+                    </div>
+
+                    <div class="surface-card p-6 md:p-8 border-t-2 border-t-[var(--accent-orange)]">
+                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4" aria-label="Sample unit economics and SaaS KPIs">
+                            <div class="surface-card p-4 border border-[var(--border-subtle)]">
+                                <p class="text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-widest mb-1">MRR</p>
+                                <p class="text-xl font-mono text-[var(--text-primary)]">£142,000</p>
+                                <p class="text-xs text-[var(--text-muted)] mt-2">Latest recurring revenue from your metrics row</p>
+                            </div>
+                            <div class="surface-card p-4 border border-[var(--border-subtle)]">
+                                <p class="text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-widest mb-1">ARR</p>
+                                <p class="text-xl font-mono text-[var(--text-primary)]">£1,704,000</p>
+                                <p class="text-xs text-[var(--text-muted)] mt-2">MRR × 12</p>
+                            </div>
+                            <div class="surface-card p-4 border border-[var(--border-subtle)]">
+                                <p class="text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-widest mb-1">NRR %</p>
+                                <p class="text-xl font-mono text-[var(--text-primary)]">118%</p>
+                                <p class="text-xs text-[var(--text-muted)] mt-2">Needs starting + expansion − churn − contraction MRR</p>
+                            </div>
+                            <div class="surface-card p-4 border border-[var(--border-subtle)]">
+                                <p class="text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-widest mb-1">CAC (from inputs)</p>
+                                <p class="text-xl font-mono text-[var(--text-primary)]">£2,400</p>
+                                <p class="text-xs text-[var(--text-muted)] mt-2">S&amp;M spend / new customers</p>
+                            </div>
+                            <div class="surface-card p-4 border border-[var(--border-subtle)]">
+                                <p class="text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-widest mb-1">CAC (stored)</p>
+                                <p class="text-xl font-mono text-[var(--text-primary)]">£2,100</p>
+                                <p class="text-xs text-[var(--text-muted)] mt-2">Raw field on monthly row</p>
+                            </div>
+                            <div class="surface-card p-4 border border-[var(--border-subtle)]">
+                                <p class="text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-widest mb-1">LTV:CAC</p>
+                                <p class="text-xl font-mono text-[var(--text-primary)]">4.2×</p>
+                                <p class="text-xs text-[var(--text-muted)] mt-2">Target &gt; 3×</p>
+                            </div>
+                            <div class="surface-card p-4 border border-[var(--border-subtle)]">
+                                <p class="text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-widest mb-1">CAC payback (mo)</p>
+                                <p class="text-xl font-mono text-[var(--text-primary)]">11.2</p>
+                                <p class="text-xs text-[var(--text-muted)] mt-2">CAC / (MRR × gross margin %)</p>
+                            </div>
+                            <div class="surface-card p-4 border border-[var(--border-subtle)]">
+                                <p class="text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-widest mb-1">Logo churn %</p>
+                                <p class="text-xl font-mono text-[var(--text-primary)]">2.1%</p>
+                                <p class="text-xs text-[var(--text-muted)] mt-2">Customers lost / start</p>
+                            </div>
+                            <div class="surface-card p-4 border border-[var(--border-subtle)]">
+                                <p class="text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-widest mb-1">Latest gross margin %</p>
+                                <p class="text-xl font-mono text-[var(--text-primary)]">68%</p>
+                                <p class="text-xs text-[var(--text-muted)] mt-2">From forecast P&amp;L</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section id="integrations" class="border-b border-[var(--border-subtle)]">
+                <div class="max-w-6xl mx-auto px-6 py-16 md:py-22 text-center">
+                    <h2 class="text-xs font-semibold uppercase tracking-[0.22em] text-[var(--text-muted)]">Integrations</h2>
+                    <p class="text-sm text-[var(--text-muted)] mt-3 mb-10 md:mb-12 tracking-tight max-w-md mx-auto">Plug in the tools you already use — Quentl keeps the numbers honest.</p>
+                    <div class="flex flex-wrap justify-center items-center gap-6 md:gap-10">
+                        <div class="integration-logo-card" role="group" aria-label="Xero">
+                            <img src="assets/integrations/xero.svg" alt="" class="integration-logo-img" width="120" height="36" loading="lazy" decoding="async">
+                        </div>
+                        <div class="integration-logo-card" role="group" aria-label="QuickBooks Online">
+                            <img src="assets/integrations/quickbooks.svg" alt="" class="integration-logo-img" width="140" height="36" loading="lazy" decoding="async">
+                        </div>
+                        <div class="integration-logo-card" role="group" aria-label="Shopify">
+                            <img src="assets/integrations/shopify.svg" alt="" class="integration-logo-img" width="120" height="36" loading="lazy" decoding="async">
+                        </div>
+                    </div>
+                </div>
+            </section>
+
+            <section id="about-quentl" class="marketing-about-band border-b border-[var(--border-subtle)]">
+                <div class="max-w-6xl mx-auto px-6 py-20 md:py-24">
+                    <div class="max-w-2xl mx-auto text-center">
+                        <p class="text-xs font-semibold uppercase tracking-[0.22em] text-[var(--text-muted)]">Quentl</p>
+                        <h2 class="mt-3 text-xl md:text-2xl font-semibold tracking-tight text-[var(--text-primary)]">Built with founders in mind</h2>
+                        <p class="mt-5 text-sm md:text-base text-[var(--text-muted)] leading-relaxed tracking-tight">
+                            Quentl is your founder-grade cockpit for forecasts, runway, pipeline, and day-to-day ops — so you always know where you stand and what to do next.
+                        </p>
+                        <p class="mt-4 text-sm md:text-base text-[var(--text-muted)] leading-relaxed tracking-tight">
+                            Quentl is a straightforward workspace for your numbers. When you want help, you reach a real person who knows your context — not a faceless help desk or an automated coach.
+                        </p>
+                        <p class="mt-4 text-sm md:text-base text-[var(--text-muted)] leading-relaxed tracking-tight">
+                            You stay in control of the model; we are here when you want a second pair of eyes.
+                        </p>
+                    </div>
+                </div>
+            </section>
+
+            <section class="max-w-6xl mx-auto px-6 py-20 md:py-28 text-center">
+                <a href="/onboarding.html?return=/app/" class="btn-accent text-base md:text-lg px-10 py-4 inline-flex items-center justify-center font-medium tracking-tight">
+                    Try Quentl free
+                </a>
+                <p class="mt-6 text-xs text-[var(--text-muted)] tracking-tight">
+                    <a href="/sign-in.html" class="text-[var(--accent-orange)] hover:underline underline-offset-4">Already using Quentl? Sign in</a>
+                </p>
+            </section>
         </div>
-    </div>
+    </main>
+
+    <footer class="border-t border-[var(--border-subtle)] py-10 px-6 bg-[var(--bg-dark)]">
+        <div class="max-w-6xl mx-auto flex flex-col sm:flex-row items-center justify-between gap-4 text-sm text-[var(--text-muted)]">
+            <div class="site-brand">
+                <a href="/" class="site-brand-logoLink opacity-95" aria-label="Quentl home">
+                    <span class="site-logo-text">Quentl</span>
+                </a>
+            </div>
+            <p>&copy; <span id="y"></span> Quentl</p>
+        </div>
+    </footer>
 
     <script>
-        const LAYOUT_KEY = 'marmalade_dashboard_layout_v1';
+        document.getElementById('y').textContent = new Date().getFullYear();
 
-        const TILE_TYPES = {
-            runway: {
-                label: 'Cash runway',
-                desc: 'Estimated months of runway from burn and liquidity.'
-            },
-            financial_overview: {
-                label: 'Financial overview',
-                desc: 'Fixed costs, YTD profit, pipeline cover — snapshot cards.'
-            },
-            liquidity: {
-                label: 'Cash & liquidity',
-                desc: 'Cash on hand, burn, weighted pipeline, and one-off CAPEX.'
-            },
-            fixed_costs: {
-                label: 'Monthly fixed costs',
-                desc: 'Operating overhead from your latest forecast row.'
-            },
-            ytd_profit: {
-                label: 'YTD net profit',
-                desc: 'Running cumulative profit through the forecast window.'
-            },
-            pipeline_health: {
-                label: 'Pipeline health',
-                desc: 'How much pipeline covers forecast shortfalls.'
-            },
-            forecast_table: {
-                label: 'Forecast by month',
-                desc: 'Month-by-month revenue vs break-even with drill-down.'
+        (function () {
+            var hero = document.getElementById('marketing-hero');
+            var root = document.documentElement;
+            if (!hero || !root.classList.contains('marketing-landing')) return;
+
+            var damp = 0.085;
+            var current = 0;
+            var raf = null;
+
+            function scrollSpan() {
+                var h = hero.offsetHeight;
+                var vh = window.innerHeight;
+                return Math.max(320, h + vh * 0.5);
             }
-        };
 
-        const DEFAULT_TILES = [
-            { id: 'tile-runway', type: 'runway' },
-            { id: 'tile-overview', type: 'financial_overview' },
-            { id: 'tile-forecast', type: 'forecast_table' }
-        ];
+            function smoothstep(x) {
+                var t = Math.max(0, Math.min(1, x));
+                return t * t * (3 - 2 * t);
+            }
 
-        let currentData = [];
-        let runwayData = null;
+            function targetT() {
+                var y = window.scrollY || document.documentElement.scrollTop;
+                var span = scrollSpan();
+                return smoothstep(span <= 0 ? 1 : y / span);
+            }
 
-        function loadLayout() {
-            try {
-                const raw = localStorage.getItem(LAYOUT_KEY);
-                if (!raw) return DEFAULT_TILES.slice();
-                const parsed = JSON.parse(raw);
-                if (!parsed.tiles || !Array.isArray(parsed.tiles) || parsed.tiles.length === 0) {
-                    return DEFAULT_TILES.slice();
+            function reducedMotion() {
+                return window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+            }
+
+            function apply(val) {
+                root.style.setProperty('--theme-t', val.toFixed(5));
+            }
+
+            function loop() {
+                raf = null;
+                var target = targetT();
+                if (reducedMotion()) {
+                    current = target;
+                    apply(current);
+                    return;
                 }
-                return parsed.tiles;
-            } catch (e) {
-                return DEFAULT_TILES.slice();
-            }
-        }
-
-        function saveLayout(tiles) {
-            localStorage.setItem(LAYOUT_KEY, JSON.stringify({ tiles }));
-        }
-
-        function populateAddSelect() {
-            const sel = document.getElementById('addTileType');
-            sel.innerHTML = Object.entries(TILE_TYPES).map(([key, meta]) =>
-                `<option value="${key}">${meta.label}</option>`
-            ).join('');
-        }
-
-        function removeTile(tileId) {
-            if (!confirm('Remove this tile from your dashboard?')) return;
-            const next = loadLayout().filter(t => t.id !== tileId);
-            saveLayout(next);
-            renderDashboardShell();
-            refreshAllData();
-        }
-
-        function addTile() {
-            const type = document.getElementById('addTileType').value;
-            if (!TILE_TYPES[type]) return;
-            const tiles = loadLayout();
-            tiles.push({ id: 'tile-' + Date.now(), type });
-            saveLayout(tiles);
-            renderDashboardShell();
-            refreshAllData();
-        }
-
-        function resetLayout() {
-            if (!confirm('Reset dashboard to the default tiles?')) return;
-            localStorage.removeItem(LAYOUT_KEY);
-            renderDashboardShell();
-            refreshAllData();
-        }
-
-        function chunkIntoRows(tiles) {
-            const rows = [];
-            for (let i = 0; i < tiles.length; i += 2) {
-                rows.push(tiles.slice(i, i + 2));
-            }
-            return rows;
-        }
-
-        let draggingTileId = null;
-
-        function moveTileRelative(dragId, targetId, insertAfter) {
-            const orig = loadLayout();
-            const dragItem = orig.find(t => t.id === dragId);
-            if (!dragItem || dragId === targetId) return;
-            const rest = orig.filter(t => t.id !== dragId);
-            let idx = rest.findIndex(t => t.id === targetId);
-            if (idx < 0) return;
-            if (insertAfter) idx++;
-            rest.splice(idx, 0, dragItem);
-            saveLayout(rest);
-            renderDashboardShell();
-            refreshAllData();
-        }
-
-        function onTileDragStart(e) {
-            const handle = e.currentTarget;
-            const tile = handle.closest('.dashboard-tile');
-            if (!tile) return;
-            draggingTileId = tile.dataset.tileId;
-            e.dataTransfer.setData('text/plain', draggingTileId);
-            e.dataTransfer.effectAllowed = 'move';
-            tile.classList.add('dashboard-tile--dragging');
-        }
-
-        function onTileDragEnd(e) {
-            const handle = e.currentTarget;
-            const tile = handle.closest('.dashboard-tile');
-            if (tile) tile.classList.remove('dashboard-tile--dragging');
-            document.querySelectorAll('.dashboard-tile--drop-target').forEach(el => el.classList.remove('dashboard-tile--drop-target'));
-            draggingTileId = null;
-        }
-
-        function onTileDragOver(e) {
-            e.preventDefault();
-            e.dataTransfer.dropEffect = 'move';
-            const tile = e.currentTarget;
-            if (!tile.classList.contains('dashboard-tile')) return;
-            if (tile.dataset.tileId === draggingTileId) return;
-            tile.classList.add('dashboard-tile--drop-target');
-        }
-
-        function onTileDragLeave(e) {
-            const tile = e.currentTarget;
-            const rel = e.relatedTarget;
-            if (rel && tile.contains(rel)) return;
-            tile.classList.remove('dashboard-tile--drop-target');
-        }
-
-        function onTileDrop(e) {
-            e.preventDefault();
-            const tile = e.currentTarget;
-            tile.classList.remove('dashboard-tile--drop-target');
-            const dragId = e.dataTransfer.getData('text/plain');
-            const targetId = tile.dataset.tileId;
-            if (!dragId || !targetId || dragId === targetId) return;
-            const rect = tile.getBoundingClientRect();
-            const insertAfter = (e.clientX - rect.left) > rect.width / 2;
-            moveTileRelative(dragId, targetId, insertAfter);
-        }
-
-        function createTileElement(tile) {
-            const meta = TILE_TYPES[tile.type];
-            if (!meta) return null;
-
-            const wrap = document.createElement('div');
-            wrap.className = 'dashboard-tile surface-card overflow-hidden flex flex-col border border-[var(--border-subtle)] min-w-0';
-            wrap.dataset.tileId = tile.id;
-            wrap.dataset.tileType = tile.type;
-
-            wrap.innerHTML = `
-                <div class="flex justify-between items-start gap-2 px-4 py-3 border-b border-[var(--border-subtle)] bg-[var(--bg-elevated)] shrink-0">
-                    <div class="flex items-start gap-2 min-w-0 flex-1">
-                        <button type="button" class="dashboard-tile__drag shrink-0 cursor-grab active:cursor-grabbing text-[var(--text-muted)] hover:text-[var(--text-primary)] font-mono text-sm leading-none px-1 py-0.5 rounded border border-transparent hover:border-[var(--border-subtle)] select-none" draggable="true" title="Drag to reorder" aria-label="Drag to reorder">⠿</button>
-                        <div class="min-w-0">
-                            <h3 class="text-xs font-semibold text-[var(--text-muted)] uppercase tracking-widest">${meta.label}</h3>
-                            <p class="text-[10px] text-[var(--text-muted)] mt-0.5 opacity-90 hidden sm:block">${meta.desc}</p>
-                        </div>
-                    </div>
-                    <button type="button" class="tile-remove text-[var(--text-muted)] hover:text-[var(--death-red)] font-mono text-xl leading-none px-1 rounded hover:bg-[var(--surface-hover)]" aria-label="Remove tile">×</button>
-                </div>
-                <div class="tile-body flex-1 min-h-[4rem]" data-tile-body></div>
-            `;
-
-            wrap.querySelector('.tile-remove').onclick = (ev) => { ev.stopPropagation(); removeTile(tile.id); };
-
-            const handle = wrap.querySelector('.dashboard-tile__drag');
-            handle.addEventListener('dragstart', onTileDragStart);
-            handle.addEventListener('dragend', onTileDragEnd);
-
-            wrap.addEventListener('dragover', onTileDragOver);
-            wrap.addEventListener('dragleave', onTileDragLeave);
-            wrap.addEventListener('drop', onTileDrop);
-
-            return wrap;
-        }
-
-        function renderDashboardShell() {
-            const grid = document.getElementById('dashboard-grid');
-            grid.innerHTML = '';
-            const tiles = loadLayout();
-            const rows = chunkIntoRows(tiles);
-
-            rows.forEach(rowTiles => {
-                const row = document.createElement('div');
-                row.className = 'dashboard-row grid grid-cols-1 md:grid-cols-2 gap-6';
-
-                if (rowTiles.length === 1) {
-                    const el = createTileElement(rowTiles[0]);
-                    if (el) {
-                        el.classList.add('md:col-span-2');
-                        row.appendChild(el);
-                    }
-                } else {
-                    rowTiles.forEach(t => {
-                        const el = createTileElement(t);
-                        if (el) row.appendChild(el);
-                    });
+                current += (target - current) * damp;
+                if (Math.abs(target - current) < 0.002) current = target;
+                apply(current);
+                if (Math.abs(target - current) > 0.0012) {
+                    raf = requestAnimationFrame(loop);
                 }
-                grid.appendChild(row);
-            });
-        }
-
-        function applyRunwayTile(el, data) {
-            const body = el.querySelector('[data-tile-body]');
-            if (!body || !data) {
-                if (body) body.innerHTML = '<p class="text-sm text-[var(--text-muted)] p-6">Could not load runway.</p>';
-                return;
             }
 
-            body.className = 'tile-body flex-1 flex flex-col items-center justify-center p-10 md:p-12 text-center border-t-4 transition-colors duration-500';
-
-            if (data.status_color === 'Green') {
-                body.style.borderColor = 'var(--runway-green)';
-            } else if (data.status_color === 'Yellow') {
-                body.style.borderColor = 'var(--warning-yellow)';
-            } else if (data.status_color === 'Red') {
-                body.style.borderColor = 'var(--death-red)';
-            } else {
-                body.style.borderColor = 'var(--border-subtle)';
-            }
-
-            let valueColor = 'var(--text-primary)';
-            if (data.status_color === 'Green') valueColor = 'var(--runway-green)';
-            else if (data.status_color === 'Yellow') valueColor = 'var(--warning-yellow)';
-            else if (data.status_color === 'Red') valueColor = 'var(--death-red)';
-
-            body.innerHTML = `
-                <p class="text-[10px] font-bold uppercase tracking-widest text-[var(--text-muted)] mb-3">Estimated cash runway</p>
-                <p class="text-5xl md:text-6xl font-mono font-black mb-3 tracking-tight" style="color:${valueColor}">${data.status_message || '—'}</p>
-                <p class="text-xs font-mono text-[var(--text-muted)] opacity-80">Based on £${Number(data.starting_cash || 0).toLocaleString()} cash and £${Number(data.burn_rate || 0).toLocaleString()} monthly burn.</p>
-            `;
-        }
-
-        function applyLiquidityTile(el, data) {
-            const body = el.querySelector('[data-tile-body]');
-            if (!body || !data) {
-                if (body) body.innerHTML = '<p class="text-sm text-[var(--text-muted)] p-4">No data.</p>';
-                return;
-            }
-            body.className = 'tile-body flex-1 p-6';
-            body.innerHTML = `
-                <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 text-center">
-                    <div class="surface-card p-4 border border-[var(--border-subtle)]">
-                        <p class="text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-widest mb-1">Cash on hand</p>
-                        <p class="text-xl font-mono text-[var(--text-primary)]">£${Number(data.starting_cash || 0).toLocaleString()}</p>
-                    </div>
-                    <div class="surface-card p-4 border border-[var(--border-subtle)]">
-                        <p class="text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-widest mb-1">Monthly burn</p>
-                        <p class="text-xl font-mono text-[var(--accent-orange)]">£${Number(data.burn_rate || 0).toLocaleString()}</p>
-                    </div>
-                    <div class="surface-card p-4 border border-[var(--border-subtle)]">
-                        <p class="text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-widest mb-1">Weighted pipeline</p>
-                        <p class="text-xl font-mono text-[var(--runway-green)]">£${Number(data.expected_cash || 0).toLocaleString()}</p>
-                    </div>
-                    <div class="surface-card p-4 border border-[var(--border-subtle)]">
-                        <p class="text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-widest mb-1">One-off CAPEX</p>
-                        <p class="text-xl font-mono text-[var(--death-red)]">£${Number(data.capex || 0).toLocaleString()}</p>
-                    </div>
-                </div>
-            `;
-        }
-
-        function applyFinancialOverviewTile(el, data) {
-            const body = el.querySelector('[data-tile-body]');
-            if (!body) return;
-            if (!data || data.length === 0) {
-                body.className = 'tile-body flex-1 p-6';
-                body.innerHTML = '<p class="text-sm text-[var(--text-muted)]">No forecast data yet. Add products and unit forecasts.</p>';
-                return;
-            }
-
-            const totalShortfall = data.reduce((acc, row) => {
-                const profit = parseFloat(row.net_profit);
-                return profit < 0 ? acc + Math.abs(profit) : acc;
-            }, 0);
-            const pipelineWeighted = parseFloat(data[0].weighted_pipeline_value);
-            const coverage = totalShortfall > 0 ? (pipelineWeighted / totalShortfall) * 100 : 100;
-
-            let healthStatus = 'CRITICAL 🚨';
-            let healthColor = 'var(--death-red)';
-            if (coverage >= 100) { healthStatus = 'HEALTHY ✅'; healthColor = 'var(--runway-green)'; }
-            else if (coverage >= 50) { healthStatus = 'AT RISK ⚠️'; healthColor = 'var(--warning-yellow)'; }
-
-            body.className = 'tile-body flex-1 p-6';
-            body.innerHTML = `
-                <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div class="surface-card p-5 border-l-2 border-l-[var(--border-subtle)]">
-                        <h4 class="text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-widest">Monthly fixed costs</h4>
-                        <p class="text-2xl font-mono text-[var(--text-primary)] mt-2">£${parseFloat(data[0].fixed_costs).toLocaleString(undefined, { maximumFractionDigits: 0 })}</p>
-                    </div>
-                    <div class="surface-card p-5 border-l-2 border-l-[var(--accent-indigo)]">
-                        <h4 class="text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-widest">YTD net profit (running)</h4>
-                        <p class="text-2xl font-mono text-[var(--accent-indigo)] mt-2">£${parseFloat(data[data.length - 1].ytd_net_profit).toLocaleString()}</p>
-                        <p class="text-[10px] font-mono text-[var(--text-muted)] mt-1">Cumulative by end of forecast</p>
-                    </div>
-                    <div class="surface-card p-5 border-l-2" style="border-left-color: ${healthColor}">
-                        <h4 class="text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-widest">Pipeline health</h4>
-                        <div class="flex justify-between items-end mt-2 gap-2">
-                            <div>
-                                <p class="text-2xl font-mono text-[var(--text-primary)]">${coverage.toFixed(0)}% <span class="text-sm">cover</span></p>
-                                <p class="text-[10px] font-mono font-bold mt-1" style="color: ${healthColor}">${healthStatus}</p>
-                            </div>
-                            <div class="text-right text-[10px] font-mono text-[var(--text-muted)] space-y-1">
-                                <p>Shortfall: £${totalShortfall.toLocaleString()}</p>
-                                <p>Pipeline: £${pipelineWeighted.toLocaleString()}</p>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            `;
-        }
-
-        function applySingleMetricTile(el, kind) {
-            const body = el.querySelector('[data-tile-body]');
-            if (!body) return;
-            body.className = 'tile-body flex-1 p-6 flex flex-col justify-center';
-
-            if (!currentData || currentData.length === 0) {
-                body.innerHTML = '<p class="text-sm text-[var(--text-muted)]">No forecast data yet.</p>';
-                return;
-            }
-
-            const data = currentData;
-            if (kind === 'fixed_costs') {
-                body.innerHTML = `
-                    <p class="text-3xl font-mono text-[var(--text-primary)]">£${parseFloat(data[0].fixed_costs).toLocaleString(undefined, { maximumFractionDigits: 0 })}</p>
-                    <p class="text-[10px] font-mono text-[var(--text-muted)] mt-2">From latest forecast month</p>
-                `;
-                return;
-            }
-            if (kind === 'ytd_profit') {
-                body.innerHTML = `
-                    <p class="text-3xl font-mono text-[var(--accent-indigo)]">£${parseFloat(data[data.length - 1].ytd_net_profit).toLocaleString()}</p>
-                    <p class="text-[10px] font-mono text-[var(--text-muted)] mt-2">Through end of forecast</p>
-                `;
-                return;
-            }
-            if (kind === 'pipeline_health') {
-                const totalShortfall = data.reduce((acc, row) => {
-                    const profit = parseFloat(row.net_profit);
-                    return profit < 0 ? acc + Math.abs(profit) : acc;
-                }, 0);
-                const pipelineWeighted = parseFloat(data[0].weighted_pipeline_value);
-                const coverage = totalShortfall > 0 ? (pipelineWeighted / totalShortfall) * 100 : 100;
-                let healthStatus = 'CRITICAL 🚨';
-                let healthColor = 'var(--death-red)';
-                if (coverage >= 100) { healthStatus = 'HEALTHY ✅'; healthColor = 'var(--runway-green)'; }
-                else if (coverage >= 50) { healthStatus = 'AT RISK ⚠️'; healthColor = 'var(--warning-yellow)'; }
-                body.innerHTML = `
-                    <p class="text-3xl font-mono text-[var(--text-primary)]">${coverage.toFixed(0)}% <span class="text-lg text-[var(--text-muted)]">cover</span></p>
-                    <p class="text-[10px] font-mono font-bold mt-2" style="color:${healthColor}">${healthStatus}</p>
-                    <p class="text-xs font-mono text-[var(--text-muted)] mt-2">Shortfall £${totalShortfall.toLocaleString()} · Pipeline £${pipelineWeighted.toLocaleString()}</p>
-                `;
-            }
-        }
-
-        function renderForecastTableInTile(el) {
-            const body = el.querySelector('[data-tile-body]');
-            if (!body) return;
-            body.className = 'tile-body flex-1 p-0 overflow-hidden';
-            const tableId = 'forecast-tbody-' + el.dataset.tileId;
-            body.innerHTML = `
-                <div class="overflow-x-auto">
-                    <table class="w-full text-left border-collapse">
-                        <thead>
-                            <tr>
-                                <th class="pl-4 md:pl-6">Month</th>
-                                <th class="text-right">Revenue</th>
-                                <th class="text-right">Break-even</th>
-                                <th class="text-right">Status</th>
-                                <th class="text-center pr-4 md:pr-6">Action</th>
-                            </tr>
-                        </thead>
-                        <tbody id="${tableId}"></tbody>
-                    </table>
-                </div>
-            `;
-            fillForecastTableBody(tableId, currentData);
-        }
-
-        function fillForecastTableBody(tbodyId, data) {
-            const tbody = document.getElementById(tbodyId);
-            if (!tbody) return;
-            tbody.innerHTML = '';
-            if (!data || data.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="5" class="text-center py-8 text-[var(--text-muted)] font-mono text-sm">No forecast rows yet.</td></tr>';
-                return;
-            }
-            data.forEach(row => {
-                const dateRaw = row.forecast_month;
-                const dateStr = new Date(dateRaw).toLocaleDateString('en-GB', { month: 'short', year: 'numeric' });
-                const isSafe = parseFloat(row.revenue) >= parseFloat(row.revenue_needed_to_break_even);
-                const statusStyle = isSafe
-                    ? 'border border-[var(--runway-green)] text-[var(--runway-green)] bg-[var(--status-good-bg)]'
-                    : 'border border-[var(--death-red)] text-[var(--death-red)] bg-[var(--status-bad-bg)]';
-
-                const tr = document.createElement('tr');
-                tr.className = 'hover:bg-[var(--row-hover)] transition cursor-pointer group';
-                tr.onclick = () => openModal(dateRaw, dateStr);
-                tr.innerHTML = `
-                    <td class="font-medium group-hover:text-[var(--text-primary)] transition pl-4 md:pl-6">${dateStr}</td>
-                    <td class="text-right font-mono text-[var(--text-primary)]">£${parseFloat(row.revenue).toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
-                    <td class="text-right font-mono text-[var(--text-muted)]">£${parseFloat(row.revenue_needed_to_break_even).toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
-                    <td class="text-right">
-                        <span class="px-2 py-1 rounded text-[10px] font-mono uppercase tracking-widest ${statusStyle}">${isSafe ? 'Afloat 🚢' : 'Sinking ⚠️'}</span>
-                    </td>
-                    <td class="text-center pr-4 md:pr-6"><span class="text-[var(--text-muted)] group-hover:text-[var(--text-primary)] text-xs font-mono uppercase tracking-widest transition">View</span></td>
-                `;
-                tbody.appendChild(tr);
-            });
-        }
-
-        function refreshAllData() {
-            document.querySelectorAll('.dashboard-tile').forEach(el => {
-                const type = el.dataset.tileType;
-                if (type === 'runway') applyRunwayTile(el, runwayData);
-                else if (type === 'liquidity') applyLiquidityTile(el, runwayData);
-                else if (type === 'financial_overview') applyFinancialOverviewTile(el, currentData);
-                else if (type === 'fixed_costs') applySingleMetricTile(el, 'fixed_costs');
-                else if (type === 'ytd_profit') applySingleMetricTile(el, 'ytd_profit');
-                else if (type === 'pipeline_health') applySingleMetricTile(el, 'pipeline_health');
-                else if (type === 'forecast_table') {
-                    renderForecastTableInTile(el);
+            function onScrollOrResize() {
+                if (reducedMotion()) {
+                    current = targetT();
+                    apply(current);
+                    return;
                 }
-            });
-        }
-
-        async function loadDashboard() {
-            try {
-                const response = await fetch('/api/dashboard/1');
-                currentData = await response.json();
-            } catch (error) {
-                console.error(error);
-                currentData = [];
+                if (!raf) raf = requestAnimationFrame(loop);
             }
-        }
 
-        async function loadRunway() {
-            try {
-                const response = await fetch('/api/runway/1');
-                runwayData = await response.json();
-            } catch (error) {
-                console.error(error);
-                runwayData = null;
-            }
-        }
+            window.addEventListener('scroll', onScrollOrResize, { passive: true });
+            window.addEventListener('resize', onScrollOrResize);
 
-        async function refresh() {
-            await loadDashboard();
-            await loadRunway();
-            refreshAllData();
-        }
-
-        document.getElementById('addTileBtn').addEventListener('click', addTile);
-        document.getElementById('resetDashboardBtn').addEventListener('click', resetLayout);
-
-        window.onload = () => {
-            populateAddSelect();
-            renderDashboardShell();
-            refresh();
-        };
-
-        async function openModal(rawDate, prettyDate) {
-            document.getElementById('modalTitle').innerText = `Sales for ${prettyDate}`;
-            const modal = document.getElementById('detailModal');
-            const tbody = document.getElementById('modalBody');
-            tbody.innerHTML = '<tr><td colspan="4" class="text-center py-8 text-[var(--text-muted)] font-mono text-sm">Loading...</td></tr>';
-            modal.classList.remove('hidden');
-
-            try {
-                const res = await fetch(`/api/dashboard/1/details/${rawDate}`);
-                const items = await res.json();
-
-                tbody.innerHTML = '';
-                if (items.length === 0) tbody.innerHTML = '<tr><td colspan="4" class="text-center py-8 text-[var(--text-muted)] font-mono text-sm">No sales planned.</td></tr>';
-
-                items.forEach(item => {
-                    const tr = document.createElement('tr');
-                    tr.className = 'hover:bg-[var(--row-hover)] transition';
-                    tr.innerHTML = `
-                        <td class="pl-6 py-4 text-sm font-medium text-[var(--text-primary)]">${item.name}</td>
-                        <td class="text-right py-4 font-mono text-sm text-[var(--text-muted)]">${item.units_forecasted}</td>
-                        <td class="text-right py-4 font-mono text-sm text-[var(--text-primary)]">£${parseFloat(item.revenue).toLocaleString(undefined, { minimumFractionDigits: 2 })}</td>
-                        <td class="text-center pr-6 py-4">
-                            <button onclick="deleteItem(${item.id}, '${rawDate}', '${prettyDate}', event)" class="btn-primary hover:border-[var(--death-red)] hover:text-[var(--death-red)] text-xs py-1 px-2">Delete</button>
-                        </td>
-                    `;
-                    tbody.appendChild(tr);
-                });
-            } catch (err) { console.error(err); }
-        }
-
-        function closeModal() {
-            document.getElementById('detailModal').classList.add('hidden');
-        }
-
-        async function deleteItem(id, rawDate, prettyDate, event) {
-            event.stopPropagation();
-            if (!confirm('Delete this sales forecast?')) return;
-
-            await fetch(`/api/forecast/${id}`, { method: 'DELETE' });
-            openModal(rawDate, prettyDate);
-            await refresh();
-        }
+            onScrollOrResize();
+        })();
     </script>
 </body>
 </html>

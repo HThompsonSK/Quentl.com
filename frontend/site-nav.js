@@ -1,22 +1,30 @@
 /**
  * Injects main nav. Set <body data-nav="dashboard|financial|sales|analytics|metrics|products|costs|cashflow|funding|settings">.
+ * Use data-nav="onboarding" for account setup only (no product links).
+ * Paths are root-absolute so navigation works from /app/ and from top-level HTML pages.
  */
 (function () {
     var nav = document.getElementById('site-nav');
     if (!nav) return;
 
     var key = (document.body && document.body.getAttribute('data-nav')) || 'dashboard';
+    if (key === 'onboarding') {
+        nav.setAttribute('aria-label', 'Account setup');
+        nav.innerHTML = '<span class="text-xs font-medium uppercase tracking-widest text-[var(--text-muted)]">Account setup</span>';
+        return;
+    }
+
     var items = [
-        ['dashboard', 'index.html', 'Dashboard'],
-        ['financial', 'financial-model.html', 'Financial model'],
-        ['sales', 'sales-planner.html', 'Sales'],
-        ['analytics', 'analytics.html', 'Analytics'],
-        ['metrics', 'key-metrics.html', 'Metrics'],
-        ['products', 'products.html', 'Products'],
-        ['costs', 'operating-costs.html', 'Costs'],
-        ['cashflow', 'projects.html', 'Cashflow'],
-        ['funding', 'funding.html', 'Funding'],
-        ['settings', 'settings.html', 'Settings']
+        ['dashboard', '/app/', 'Dashboard'],
+        ['financial', '/financial-model.html', 'Financial model'],
+        ['sales', '/sales-planner.html', 'Sales'],
+        ['analytics', '/analytics.html', 'Analytics'],
+        ['metrics', '/key-metrics.html', 'Metrics'],
+        ['products', '/products.html', 'Products'],
+        ['costs', '/operating-costs.html', 'Costs'],
+        ['cashflow', '/projects.html', 'Cashflow'],
+        ['funding', '/funding.html', 'Funding'],
+        ['settings', '/settings.html', 'Settings']
     ];
 
     nav.innerHTML = items.map(function (row) {

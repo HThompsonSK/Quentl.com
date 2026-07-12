@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Settings - Marmalade</title>
+    <title>Settings - Quentl</title>
     <script src="https://cdn.tailwindcss.com"></script>
     <link rel="stylesheet" href="global.css">
     <script src="theme.js"></script>
@@ -13,8 +13,8 @@
         <header class="site-header">
             <div class="shrink-0">
                 <div class="site-brand">
-                    <a href="index.html" class="site-brand-logoLink" aria-label="Marmalade home">
-                        <span class="site-logo-text">Marmalade</span>
+                    <a href="/app/" class="site-brand-logoLink" aria-label="Quentl home">
+                        <span class="site-logo-text">Quentl</span>
                     </a>
                 </div>
             </div>
@@ -42,7 +42,7 @@
 
         <div class="surface-card p-6 border-t-2 border-t-[var(--accent-orange)] mb-8">
             <h3 class="text-xs font-semibold text-[var(--text-muted)] uppercase tracking-widest mb-4 border-b border-[var(--border-subtle)] pb-2">Accounting connections</h3>
-            <p class="text-sm text-[var(--text-muted)] mb-4">Connect Xero or QuickBooks Online to pull <strong class="text-[var(--text-primary)] font-medium">accrual</strong> (invoice totals by invoice date) and <strong class="text-[var(--text-primary)] font-medium">cash</strong> (customer payments by payment date) into Marmalade. Configure client IDs and <code class="text-xs bg-[var(--surface-muted)] px-1 rounded">APP_BASE_URL</code> in server env; redirect URLs must match your OAuth apps.</p>
+            <p class="text-sm text-[var(--text-muted)] mb-4">Connect Xero or QuickBooks Online to pull <strong class="text-[var(--text-primary)] font-medium">accrual</strong> (invoice totals by invoice date) and <strong class="text-[var(--text-primary)] font-medium">cash</strong> (customer payments by payment date) into Quentl. Configure client IDs and <code class="text-xs bg-[var(--surface-muted)] px-1 rounded">APP_BASE_URL</code> in server env; redirect URLs must match your OAuth apps.</p>
             <p class="text-xs text-[var(--text-muted)] mb-4 font-mono opacity-90">Xero callback: <span id="xeroCbHint"></span><br>QuickBooks callback: <span id="qboCbHint"></span></p>
             <div id="integrationStatus" class="text-sm text-[var(--text-muted)] mb-4">Loading connection status…</div>
             <div class="flex flex-wrap gap-3 mb-4">
@@ -136,11 +136,13 @@
     </div>
 
     <script>
-        var GLOBAL_KEY = 'marmalade_global_assumptions_v1';
+        var GLOBAL_KEY = 'quentl_global_assumptions_v1';
+        var GLOBAL_KEY_LEGACY = 'marmalade_global_assumptions_v1';
 
         function loadGlobal() {
             try {
                 var raw = localStorage.getItem(GLOBAL_KEY);
+                if (!raw) raw = localStorage.getItem(GLOBAL_KEY_LEGACY);
                 if (!raw) return;
                 var o = JSON.parse(raw);
                 if (o.tax_rate != null) document.getElementById('tax_rate').value = o.tax_rate;

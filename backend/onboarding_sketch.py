@@ -1,9 +1,9 @@
 """
-Sketch API for conversational onboarding (Layer 2) and calibration hooks (Layer 3).
+Sketch API for optional company setup (sessions, profile merge) and calibration hooks (Layer 3).
 
 Requires migration: database/migrations/002_onboarding_sketch.sql
 
-Chat does not call an LLM here — assistant rows are stubs so routes and DB shapes stay testable.
+The product UI uses multiple-choice setup in ``frontend/onboarding.html``; message endpoints remain for tests or future use.
 """
 
 import json
@@ -91,6 +91,25 @@ class ApplyPlanOut(BaseModel):
     notes: List[str]
 
 
+class OnboardingGateOut(BaseModel):
+    show_onboarding: bool
+    company_id: int
+    reason: str
+
+
+class SessionCompleteBody(BaseModel):
+    company_id: int = Field(..., ge=1)
+
+
+class LatestSessionOut(BaseModel):
+    session: Optional[OnboardingSessionOut] = None
+
+
+class OnboardingHealthOut(BaseModel):
+    ok: bool
+    detail: str
+
+
 # --- Helpers ---
 
 
@@ -121,13 +140,105 @@ def _get_session(cur, session_id: int, company_id: int) -> Optional[Dict[str, An
     return cur.fetchone()
 
 
-STUB_ASSISTANT = (
-    "[stub] Thanks — noted. Next: describe your main revenue streams "
-    "(e.g. subscription vs one-off). A production agent would branch from your Layer-2 script here."
+# Ordered prompts: index 0 is the opening line (mirrored on the client when the log is empty).
+ONBOARDING_SCRIPT: List[str] = [
+    "Welcome to Quentl. What is your company or product called, and what do you sell in one or two sentences?",
+    "How do you make revenue today (for example subscriptions, one-off sales, services, or a mix)?",
+    "Roughly how large is your team, and what role do you play (founder, finance, operations, other)?",
+    "What is the main outcome you want from Quentl in the next 90 days?",
+    "Anything else we should know before we open your workspace?",
+]
+
+ONBOARDING_HANDOFF = (
+    "Thanks — that is everything we need for now. When you are ready, use "
+    "\"Save and open dashboard\" below. You can connect Xero or QuickBooks later under Settings."
 )
 
 
+def _assistant_reply_after_user_turn(user_message_count: int) -> str:
+    """user_message_count is the number of user rows in this session after the latest user insert."""
+    if user_message_count < len(ONBOARDING_SCRIPT):
+        return ONBOARDING_SCRIPT[user_message_count]
+    return ONBOARDING_HANDOFF
+
+
+def _latest_open_session_impl(company_id: int, conn) -> LatestSessionOut:
+    with conn.cursor() as cur:
+        cur.execute(
+            """
+            SELECT * FROM onboarding_sessions
+            WHERE company_id = %s AND completed_at IS NULL
+            ORDER BY id DESC
+            LIMIT 1
+            """,
+            (company_id,),
+        )
+        sess = cur.fetchone()
+    if not sess:
+        return LatestSessionOut(session=None)
+    return LatestSessionOut(session=OnboardingSessionOut(**dict(sess)))
+
+
 # --- Routes ---
+
+
+@router.get("/gate", response_model=OnboardingGateOut)
+def onboarding_gate(company_id: int, conn=Depends(get_db)):
+    """True until this company has at least one onboarding session with completed_at (e.g. finished MCQ setup)."""
+    with conn.cursor() as cur:
+        cur.execute(
+            """
+            SELECT EXISTS (
+                SELECT 1 FROM onboarding_sessions
+                WHERE company_id = %s AND completed_at IS NOT NULL
+            ) AS done
+            """,
+            (company_id,),
+        )
+        row = cur.fetchone()
+    done = bool(row and row.get("done"))
+    if done:
+        return OnboardingGateOut(
+            show_onboarding=False,
+            company_id=company_id,
+            reason="onboarding_already_completed",
+        )
+    return OnboardingGateOut(
+        show_onboarding=True,
+        company_id=company_id,
+        reason="no_completed_session",
+    )
+
+
+@router.get("/health", response_model=OnboardingHealthOut)
+def onboarding_health(conn=Depends(get_db)):
+    """Cheap check that onboarding tables exist; does not require any session rows."""
+    try:
+        with conn.cursor() as cur:
+            cur.execute(
+                "SELECT to_regclass('public.onboarding_sessions') IS NOT NULL AS reg"
+            )
+            row = cur.fetchone()
+            if not row or not row.get("reg"):
+                return OnboardingHealthOut(
+                    ok=False,
+                    detail="Table onboarding_sessions missing; apply database/migrations/002_onboarding_sketch.sql",
+                )
+            cur.execute("SELECT 1 FROM onboarding_sessions LIMIT 1")
+        return OnboardingHealthOut(ok=True, detail="onboarding_sessions reachable")
+    except Exception as e:
+        return OnboardingHealthOut(ok=False, detail=str(e)[:500])
+
+
+@router.get("/sessions/latest", response_model=LatestSessionOut)
+def latest_open_session(company_id: int, conn=Depends(get_db)):
+    return _latest_open_session_impl(company_id, conn)
+
+
+@router.get("/open-session", response_model=LatestSessionOut)
+def open_session_alias(company_id: int, conn=Depends(get_db)):
+    """Same as GET /sessions/latest; unambiguous path for clients and proxies."""
+    return _latest_open_session_impl(company_id, conn)
 
 
 @router.post("/sessions", response_model=OnboardingSessionOut)
@@ -196,11 +307,20 @@ def append_message(session_id: int, body: OnboardingMessageCreate, conn=Depends(
         user_row = cur.fetchone()
         cur.execute(
             """
+            SELECT COUNT(*)::int AS c FROM onboarding_messages
+            WHERE session_id = %s AND role = 'user'
+            """,
+            (session_id,),
+        )
+        n_users = int((cur.fetchone() or {}).get("c") or 0)
+        asst_text = _assistant_reply_after_user_turn(n_users)
+        cur.execute(
+            """
             INSERT INTO onboarding_messages (session_id, role, content, structured_patch)
             VALUES (%s, 'assistant', %s, NULL)
             RETURNING *
             """,
-            (session_id, STUB_ASSISTANT),
+            (session_id, asst_text),
         )
         asst_row = cur.fetchone()
         cur.execute(
@@ -209,6 +329,30 @@ def append_message(session_id: int, body: OnboardingMessageCreate, conn=Depends(
         )
         conn.commit()
     return [user_row, asst_row]
+
+
+@router.post("/sessions/{session_id}/complete", response_model=OnboardingSessionOut)
+def complete_session(session_id: int, body: SessionCompleteBody, conn=Depends(get_db)):
+    with conn.cursor() as cur:
+        row = _get_session(cur, session_id, body.company_id)
+        if not row:
+            raise HTTPException(404, "Session not found for this company.")
+        if row.get("completed_at") is not None:
+            return row
+        cur.execute(
+            """
+            UPDATE onboarding_sessions
+            SET status = 'completed',
+                completed_at = CURRENT_TIMESTAMP,
+                updated_at = CURRENT_TIMESTAMP
+            WHERE id = %s AND company_id = %s
+            RETURNING *
+            """,
+            (session_id, body.company_id),
+        )
+        updated = cur.fetchone()
+        conn.commit()
+    return updated
 
 
 @router.put("/profiles", response_model=Dict[str, Any])
