@@ -37,6 +37,7 @@
     --surface-hover: #242424;
     --border-hover: #3A3A3A;
     --bg-elevated: #141414;
+    --surface-muted: #121212;
     --row-hover: #222222;
     --bg-row-muted: #111111;
 
@@ -85,6 +86,7 @@
     --surface-hover: #F4F4F5;
     --border-hover: #D4D4D8;
     --bg-elevated: #F4F4F5;
+    --surface-muted: #F0F0F1;
     --row-hover: #F0F0F0;
     --bg-row-muted: #E8E8E8;
 
@@ -221,79 +223,83 @@ tr:last-child td {
 }
 
 /* ==========================================
-   BUTTONS (Minimalist)
+   BUTTONS — ledger-cut (sharp, not SaaS pills)
 ========================================== */
-.btn-primary {
+.btn-primary,
+.btn-accent {
+    --btn-cut: 0.7rem;
+    position: relative;
     display: inline-flex;
     align-items: center;
     justify-content: center;
     text-decoration: none !important;
-    background-color: var(--bg-surface);
-    color: var(--text-primary);
-    border: 1px solid var(--border-subtle);
-    padding: 0.625rem 1.125rem;
-    border-radius: 9999px;
+    padding: 0.7rem 1.35rem;
+    border-radius: 0;
     font-size: 0.875rem;
-    font-weight: 500;
+    font-weight: 600;
+    letter-spacing: -0.02em;
     cursor: pointer;
-    line-height: 1.2;
-    transition: background-color 0.2s ease, border-color 0.2s ease, box-shadow 0.2s ease, transform 0.15s ease;
-    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.04);
+    line-height: 1.15;
+    clip-path: polygon(
+        0 0,
+        100% 0,
+        100% calc(100% - var(--btn-cut)),
+        calc(100% - var(--btn-cut)) 100%,
+        0 100%
+    );
+    transition:
+        background-color 0.18s ease,
+        border-color 0.18s ease,
+        color 0.18s ease,
+        filter 0.18s ease;
+}
+
+.btn-primary {
+    background-color: transparent;
+    color: var(--text-primary);
+    border: none;
+    /* clip-path hides CSS borders — edge drawn via inset box-shadow */
+    box-shadow: inset 0 0 0 1px var(--border-subtle);
 }
 
 .btn-primary:hover {
     background-color: var(--surface-hover);
-    border-color: var(--border-hover);
-    box-shadow: 0 2px 8px rgba(0, 0, 0, 0.06);
+    box-shadow: inset 0 0 0 1px var(--accent-orange);
+    color: var(--text-primary);
 }
 
 .btn-primary:focus-visible {
     outline: 2px solid var(--accent-orange);
-    outline-offset: 2px;
+    outline-offset: 3px;
 }
 
 .btn-accent {
-    display: inline-flex;
-    align-items: center;
-    justify-content: center;
-    text-decoration: none !important;
     background-color: var(--accent-orange);
-    color: var(--brand-brown);
+    color: #fff8f3;
     border: none;
-    padding: 0.625rem 1.125rem;
-    border-radius: 9999px;
-    font-size: 0.875rem;
-    font-weight: 500;
-    cursor: pointer;
-    line-height: 1.2;
-    transition: background-color 0.2s ease, transform 0.15s ease, box-shadow 0.2s ease;
-    box-shadow:
-        0 1px 2px rgba(0, 0, 0, 0.06),
-        inset 0 1px 0 rgba(255, 255, 255, 0.12);
+    box-shadow: inset 0 -1px 0 color-mix(in oklch, var(--brand-brown) 35%, transparent);
 }
 
 .btn-accent:hover {
     background-color: var(--accent-orange-hover);
-    color: var(--brand-brown);
-    box-shadow:
-        0 4px 14px rgba(161, 75, 20, 0.28),
-        inset 0 1px 0 rgba(255, 255, 255, 0.14);
-    transform: translateY(-1px);
+    color: #fff8f3;
+    filter: brightness(1.04);
 }
 
 .btn-accent:focus-visible {
     outline: 2px solid var(--accent-orange-hover);
-    outline-offset: 2px;
+    outline-offset: 3px;
 }
 
 .btn-primary:active,
 .btn-accent:active {
-    transform: translateY(0);
+    filter: brightness(0.96);
 }
 
 @media (prefers-reduced-motion: reduce) {
-    .btn-accent:hover {
-        transform: none;
+    .btn-primary,
+    .btn-accent {
+        transition: none;
     }
 }
 

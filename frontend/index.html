@@ -45,12 +45,38 @@
         }
 
         .marketing-header {
-            transition: border-color 0.12s ease;
+            transition: border-color 0.12s ease, background-color 0.12s ease;
         }
         .marketing-header .site-brand .site-logo-text {
             font-size: clamp(1.85rem, 4vw, 2.65rem) !important;
         }
-        /* Hero — centred wordmark + tagline (scoped so header wordmark stays compact) */
+        .marketing-nav-link {
+            position: relative;
+            color: var(--text-muted);
+            text-decoration: none;
+            letter-spacing: -0.01em;
+            transition: color 0.18s ease;
+        }
+        .marketing-nav-link::after {
+            content: "";
+            position: absolute;
+            left: 0;
+            bottom: -0.35rem;
+            width: 100%;
+            height: 1px;
+            background: var(--accent-orange);
+            transform: scaleX(0);
+            transform-origin: left;
+            transition: transform 0.22s ease;
+        }
+        .marketing-nav-link:hover {
+            color: var(--text-primary);
+        }
+        .marketing-nav-link:hover::after {
+            transform: scaleX(1);
+        }
+
+        /* Hero — centred wordmark + tagline */
         #marketing-hero .hero-center-stage {
             text-align: center;
         }
@@ -67,7 +93,6 @@
         #marketing-hero .hero-center-wordmark-link:focus-visible {
             outline: 2px solid var(--accent-orange);
             outline-offset: 6px;
-            border-radius: 4px;
         }
         #marketing-hero .hero-center-wordmark-text {
             font-family: var(--font-brand) !important;
@@ -78,147 +103,148 @@
             line-height: 0.92 !important;
             display: block;
             color: inherit !important;
+            animation: hero-rise 0.9s cubic-bezier(0.22, 1, 0.36, 1) both;
         }
         #marketing-hero .hero-center-tagline {
             display: block;
             margin-top: clamp(1rem, 3vw, 1.75rem);
-            font-size: clamp(1.35rem, 3.8vw, 2.75rem);
+            font-size: clamp(1.35rem, 3.8vw, 2.55rem);
             font-weight: 600;
-            letter-spacing: -0.04em;
-            line-height: 1.12;
+            letter-spacing: -0.045em;
+            line-height: 1.1;
             color: var(--text-primary);
+            animation: hero-rise 0.9s cubic-bezier(0.22, 1, 0.36, 1) 0.08s both;
         }
         #marketing-hero .hero-center-lede {
             margin-left: auto;
             margin-right: auto;
-            margin-top: clamp(1.25rem, 3.5vw, 2rem);
-            max-width: 40rem;
-            font-size: clamp(0.9375rem, 1.9vw, 1.125rem);
-            line-height: 1.65;
+            margin-top: clamp(1.1rem, 3vw, 1.65rem);
+            max-width: 34rem;
+            font-size: clamp(0.9375rem, 1.7vw, 1.0625rem);
+            line-height: 1.6;
             letter-spacing: -0.015em;
             color: var(--text-muted);
+            animation: hero-rise 0.9s cubic-bezier(0.22, 1, 0.36, 1) 0.14s both;
+        }
+        #marketing-hero .hero-cta-row {
+            animation: hero-rise 0.9s cubic-bezier(0.22, 1, 0.36, 1) 0.2s both;
         }
         #marketing-hero .marketing-hero-bg {
-            opacity: 0.1;
+            opacity: 0.14;
             background-image:
-                radial-gradient(ellipse 70% 55% at 12% 20%, color-mix(in oklch, var(--accent-orange) 55%, transparent), transparent 58%),
-                radial-gradient(ellipse 50% 45% at 88% 80%, color-mix(in oklch, #c9a227 35%, transparent), transparent 55%),
-                radial-gradient(ellipse 36% 32% at 50% 0%, color-mix(in oklch, var(--runway-green) 28%, transparent), transparent 70%);
+                radial-gradient(ellipse 85% 60% at 50% -10%, color-mix(in oklch, var(--accent-orange) 42%, transparent), transparent 62%),
+                linear-gradient(115deg, transparent 40%, color-mix(in oklch, #c9a227 10%, transparent) 70%, transparent 100%),
+                radial-gradient(ellipse 40% 35% at 92% 88%, color-mix(in oklch, var(--runway-green) 18%, transparent), transparent 70%);
         }
-        .marketing-about-band {
-            background: linear-gradient(
-                180deg,
-                transparent 0%,
-                color-mix(in oklch, var(--accent-orange) 7%, transparent) 42%,
-                transparent 100%
-            );
+        #marketing-hero .marketing-hero-grain {
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+            opacity: calc(0.035 + var(--theme-t) * 0.04);
+            background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.85' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+            mix-blend-mode: multiply;
         }
-        .integration-logo-card {
+
+        /* Hero canvas — hard edges, instrument panel feel */
+        .hero-canvas {
+            margin-top: clamp(2.5rem, 6vw, 3.75rem);
+            border: 1px solid var(--border-subtle);
+            background:
+                linear-gradient(
+                    180deg,
+                    color-mix(in oklch, var(--bg-surface) 88%, transparent) 0%,
+                    color-mix(in oklch, var(--bg-dark) 55%, transparent) 100%
+                );
+            animation: hero-rise 1s cubic-bezier(0.22, 1, 0.36, 1) 0.28s both;
+        }
+        .hero-canvas__rail {
             display: flex;
-            align-items: center;
-            justify-content: center;
-            padding: 1rem 1.35rem;
-            min-height: 4.25rem;
-            min-width: 8rem;
-            border-radius: 0.875rem;
-            border: 1px solid #e4e4e7;
-            background: #ffffff;
-            transition: border-color 0.2s ease, transform 0.2s ease, box-shadow 0.2s ease;
+            flex-wrap: wrap;
+            align-items: flex-end;
+            justify-content: space-between;
+            gap: 1rem 1.5rem;
+            padding: 1.25rem 1.35rem;
+            border-bottom: 1px solid var(--border-subtle);
         }
-        .integration-logo-card:hover {
-            border-color: color-mix(in oklch, var(--accent-orange) 55%, #e4e4e7);
-            transform: translateY(-2px);
-            box-shadow: 0 8px 24px rgba(0, 0, 0, calc(0.06 + var(--theme-t) * 0.12));
-        }
-        .integration-logo-img {
-            height: clamp(28px, 4vw, 38px);
-            width: auto;
-            max-width: 128px;
-            object-fit: contain;
-        }
-        .grid-bg {
-            background-image:
-                linear-gradient(color-mix(in oklch, var(--border-subtle) 55%, transparent) 1px, transparent 1px),
-                linear-gradient(90deg, color-mix(in oklch, var(--border-subtle) 55%, transparent) 1px, transparent 1px);
-            background-size: 48px 48px;
-        }
-        /* Hero — cashflow canvas + KPI strip */
-        .hero-cf-card {
-            border-radius: 1.25rem;
-            border: 1px solid var(--border-subtle);
-            background: color-mix(in oklch, var(--bg-surface) 92%, transparent);
-            box-shadow:
-                0 1px 0 rgba(255, 255, 255, calc((1 - var(--theme-t)) * 0.06)),
-                0 24px 48px rgba(0, 0, 0, calc(0.05 + var(--theme-t) * 0.14));
-            backdrop-filter: blur(12px);
-            -webkit-backdrop-filter: blur(12px);
-            overflow: hidden;
-            transition: border-color 0.2s ease, box-shadow 0.2s ease;
-        }
-        .hero-cf-card:hover {
-            border-color: color-mix(in oklch, var(--accent-orange) 35%, var(--border-subtle));
-        }
-        .hero-cf-period {
-            display: inline-flex;
-            align-items: center;
-            gap: 0.35rem;
-            border-radius: 999px;
-            border: 1px solid var(--border-subtle);
-            background: color-mix(in oklch, var(--bg-dark) 40%, var(--bg-surface));
-            padding: 0.35rem 0.85rem;
-            font-size: 0.6875rem;
+        .hero-canvas__label {
+            font-size: 0.625rem;
             font-weight: 600;
-            letter-spacing: 0.06em;
-            color: var(--text-muted);
-        }
-        .hero-cf-metric-value {
-            font-size: clamp(1.75rem, 3.5vw, 2.35rem);
-            font-weight: 600;
-            letter-spacing: -0.03em;
-            font-variant-numeric: tabular-nums;
-            color: var(--text-primary);
-        }
-        .hero-cf-metric-hint {
-            font-size: 0.8125rem;
-            color: var(--text-muted);
-            margin-top: 0.25rem;
-            letter-spacing: -0.01em;
-        }
-        #marketing-hero .hero-cf-section-label {
-            font-size: 0.6875rem;
-            font-weight: 600;
-            letter-spacing: 0.16em;
+            letter-spacing: 0.18em;
             text-transform: uppercase;
             color: var(--text-muted);
         }
-        .hero-cf-svg-wrap {
+        .hero-canvas__value {
+            margin-top: 0.4rem;
+            font-size: clamp(1.85rem, 3.8vw, 2.5rem);
+            font-weight: 600;
+            letter-spacing: -0.04em;
+            font-variant-numeric: tabular-nums;
+            color: var(--text-primary);
+            line-height: 1;
+        }
+        .hero-canvas__hint {
+            margin-top: 0.4rem;
+            font-size: 0.75rem;
+            color: var(--text-muted);
+            letter-spacing: -0.01em;
+        }
+        .hero-canvas__period {
+            font-family: var(--font-mono);
+            font-size: 0.6875rem;
+            letter-spacing: 0.04em;
+            color: var(--text-muted);
+            border-left: 2px solid var(--accent-orange);
+            padding-left: 0.75rem;
+        }
+        .hero-canvas__chart {
             position: relative;
-            margin-top: 1.25rem;
-            border-radius: 0.875rem;
-            border: 1px solid color-mix(in oklch, var(--border-subtle) 80%, transparent);
-            background: color-mix(in oklch, var(--bg-dark) 35%, transparent);
-            padding: 0.75rem 0.5rem 0.5rem 0.25rem;
+            padding: 0.85rem 0.65rem 0.5rem 0.25rem;
         }
         @media (min-width: 640px) {
-            .hero-cf-svg-wrap {
-                padding: 1rem 0.75rem 0.65rem 0.35rem;
+            .hero-canvas__chart {
+                padding: 1.1rem 1rem 0.65rem 0.5rem;
             }
         }
         .hero-cf-svg {
             width: 100%;
-            height: clamp(168px, 26vw, 220px);
+            height: clamp(180px, 28vw, 240px);
             display: block;
         }
-        .hero-kpi-tile {
-            border-radius: 1rem;
-            border: 1px solid var(--border-subtle);
-            background: color-mix(in oklch, var(--bg-surface) 88%, transparent);
-            padding: 1rem 1.1rem;
-            transition: border-color 0.18s ease, background 0.18s ease;
+        .hero-cf-line {
+            stroke-dasharray: 520;
+            stroke-dashoffset: 520;
+            animation: draw-line 1.4s cubic-bezier(0.4, 0, 0.2, 1) 0.45s forwards;
         }
-        .hero-kpi-tile:hover {
-            border-color: color-mix(in oklch, var(--accent-orange) 28%, var(--border-subtle));
-            background: color-mix(in oklch, var(--bg-surface) 96%, transparent);
+        .hero-kpi-strip {
+            display: grid;
+            grid-template-columns: repeat(2, minmax(0, 1fr));
+            border-top: 1px solid var(--border-subtle);
+        }
+        @media (min-width: 768px) {
+            .hero-kpi-strip {
+                grid-template-columns: repeat(4, minmax(0, 1fr));
+            }
+        }
+        .hero-kpi-cell {
+            padding: 1rem 1.15rem;
+            border-right: 1px solid var(--border-subtle);
+            border-bottom: 1px solid var(--border-subtle);
+        }
+        @media (min-width: 768px) {
+            .hero-kpi-cell {
+                border-bottom: none;
+            }
+            .hero-kpi-cell:nth-child(4n) {
+                border-right: none;
+            }
+        }
+        @media (max-width: 767px) {
+            .hero-kpi-cell:nth-child(2n) {
+                border-right: none;
+            }
+            .hero-kpi-cell:nth-last-child(-n + 2) {
+                border-bottom: none;
+            }
         }
         .hero-kpi-label {
             font-size: 0.625rem;
@@ -228,38 +254,205 @@
             color: var(--text-muted);
         }
         .hero-kpi-value {
-            margin-top: 0.5rem;
-            font-size: 1.25rem;
+            margin-top: 0.45rem;
+            font-size: 1.2rem;
             font-weight: 600;
             letter-spacing: -0.03em;
             font-variant-numeric: tabular-nums;
             color: var(--text-primary);
         }
         .hero-kpi-note {
-            margin-top: 0.35rem;
+            margin-top: 0.3rem;
             font-size: 0.6875rem;
             color: var(--text-muted);
             letter-spacing: -0.01em;
             line-height: 1.35;
         }
-        .hero-kpi-dot {
-            display: inline-block;
-            width: 6px;
-            height: 6px;
-            border-radius: 999px;
-            margin-right: 0.35rem;
-            vertical-align: 0.05em;
-            background: var(--accent-orange);
+
+        /* Metrics lattice — flat data board, no nested cards */
+        .metrics-board {
+            border: 1px solid var(--border-subtle);
+            background: color-mix(in oklch, var(--bg-surface) 70%, transparent);
         }
-        .hero-kpi-dot--green {
-            background: var(--runway-green);
+        .metrics-board__head {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            gap: 1rem;
+            padding: 0.9rem 1.15rem;
+            border-bottom: 1px solid var(--border-subtle);
+            border-top: 2px solid var(--accent-orange);
+        }
+        .metrics-board__head-title {
+            font-size: 0.6875rem;
+            font-weight: 600;
+            letter-spacing: 0.16em;
+            text-transform: uppercase;
+            color: var(--text-muted);
+        }
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: 1fr;
+        }
+        @media (min-width: 640px) {
+            .metrics-grid {
+                grid-template-columns: repeat(2, minmax(0, 1fr));
+            }
+        }
+        @media (min-width: 1024px) {
+            .metrics-grid {
+                grid-template-columns: repeat(3, minmax(0, 1fr));
+            }
+        }
+        .metric-cell {
+            padding: 1.15rem 1.2rem;
+            border-bottom: 1px solid var(--border-subtle);
+            border-right: 1px solid var(--border-subtle);
+            transition: background-color 0.18s ease;
+        }
+        .metric-cell:hover {
+            background: color-mix(in oklch, var(--accent-orange) 6%, transparent);
+        }
+        .metric-cell__label {
+            font-size: 0.625rem;
+            font-weight: 600;
+            letter-spacing: 0.14em;
+            text-transform: uppercase;
+            color: var(--text-muted);
+        }
+        .metric-cell__value {
+            margin-top: 0.45rem;
+            font-family: var(--font-mono);
+            font-size: 1.15rem;
+            letter-spacing: -0.02em;
+            color: var(--text-primary);
+        }
+        .metric-cell__note {
+            margin-top: 0.4rem;
+            font-size: 0.7rem;
+            line-height: 1.4;
+            color: var(--text-muted);
+        }
+
+        .section-kicker {
+            font-size: 0.6875rem;
+            font-weight: 600;
+            letter-spacing: 0.22em;
+            text-transform: uppercase;
+            color: var(--text-muted);
+        }
+        .section-title {
+            margin-top: 0.85rem;
+            font-size: clamp(1.5rem, 3.2vw, 2rem);
+            font-weight: 600;
+            letter-spacing: -0.04em;
+            line-height: 1.15;
+            color: var(--text-primary);
+        }
+        .section-lede {
+            margin-top: 1rem;
+            font-size: 0.9375rem;
+            line-height: 1.65;
+            letter-spacing: -0.015em;
+            color: var(--text-muted);
+            max-width: 36rem;
+        }
+
+        .marketing-about-band {
+            position: relative;
+            overflow: hidden;
+        }
+        .marketing-about-band::before {
+            content: "";
+            position: absolute;
+            inset: 0;
+            background:
+                linear-gradient(
+                    105deg,
+                    color-mix(in oklch, var(--accent-orange) 9%, transparent) 0%,
+                    transparent 42%,
+                    color-mix(in oklch, #c9a227 5%, transparent) 100%
+                );
+            pointer-events: none;
+        }
+
+        .integration-row {
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: center;
+            align-items: center;
+            gap: 0;
+            border: 1px solid var(--border-subtle);
+        }
+        .integration-item {
+            flex: 1 1 10rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            min-height: 4.5rem;
+            padding: 1.15rem 1.5rem;
+            border-right: 1px solid var(--border-subtle);
+            background: color-mix(in oklch, var(--bg-surface) 65%, transparent);
+        }
+        .integration-item:last-child {
+            border-right: none;
+        }
+        .integration-logo-img {
+            height: clamp(26px, 3.5vw, 34px);
+            width: auto;
+            max-width: 120px;
+            object-fit: contain;
+            opacity: 0.88;
+            filter: grayscale(0.15);
+        }
+
+        .final-cta {
+            position: relative;
+            border-top: 1px solid var(--border-subtle);
+        }
+        .final-cta::before {
+            content: "";
+            position: absolute;
+            left: 50%;
+            top: 0;
+            width: min(12rem, 40%);
+            height: 2px;
+            background: var(--accent-orange);
+            transform: translateX(-50%);
+        }
+
+        @keyframes hero-rise {
+            from {
+                opacity: 0;
+                transform: translateY(18px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+        @keyframes draw-line {
+            to {
+                stroke-dashoffset: 0;
+            }
         }
         @media (prefers-reduced-motion: reduce) {
             html.marketing-landing {
                 scroll-behavior: auto;
             }
-            .integration-logo-card:hover {
-                transform: none;
+            #marketing-hero .hero-center-wordmark-text,
+            #marketing-hero .hero-center-tagline,
+            #marketing-hero .hero-center-lede,
+            #marketing-hero .hero-cta-row,
+            .hero-canvas,
+            .hero-cf-line {
+                animation: none;
+            }
+            .hero-cf-line {
+                stroke-dashoffset: 0;
+            }
+            .marketing-nav-link::after {
+                transition: none;
             }
         }
     </style>
@@ -275,9 +468,10 @@
                     </a>
                 </div>
             </div>
-            <nav class="flex flex-wrap items-center justify-end gap-2 sm:gap-3 text-sm" aria-label="Primary">
-                <a href="#charts" class="text-[var(--text-muted)] hover:text-[var(--text-primary)] transition hidden sm:inline">Product</a>
-                <a href="#integrations" class="text-[var(--text-muted)] hover:text-[var(--text-primary)] transition hidden sm:inline">Integrations</a>
+            <nav class="flex flex-wrap items-center justify-end gap-x-4 gap-y-2 sm:gap-x-5 text-sm" aria-label="Primary">
+                <a href="#charts" class="marketing-nav-link hidden sm:inline">Product</a>
+                <a href="#integrations" class="marketing-nav-link hidden sm:inline">Integrations</a>
+                <a href="#about-quentl" class="marketing-nav-link hidden sm:inline">About</a>
                 <a href="/onboarding.html?return=/app/" class="btn-accent text-sm py-2 px-3 sm:px-4 whitespace-nowrap">Try Quentl free</a>
                 <a href="/sign-in.html" class="btn-primary text-sm py-2 px-3 sm:px-4 whitespace-nowrap">Sign in</a>
             </nav>
@@ -287,8 +481,9 @@
     <main>
         <section id="marketing-hero" class="relative overflow-hidden border-b border-[var(--border-subtle)]">
             <div class="marketing-hero-bg absolute inset-0 pointer-events-none" aria-hidden="true"></div>
-            <div class="max-w-6xl mx-auto px-6 py-16 md:py-24 md:pb-24 relative">
-                <div class="hero-center-stage mb-12 md:mb-16">
+            <div class="marketing-hero-grain" aria-hidden="true"></div>
+            <div class="max-w-6xl mx-auto px-6 py-16 md:py-24 md:pb-20 relative">
+                <div class="hero-center-stage">
                     <h1 class="m-0 p-0 font-sans font-normal">
                         <a href="/" class="hero-center-wordmark-link" aria-label="Quentl home">
                             <span class="hero-center-wordmark-text">Quentl</span>
@@ -296,91 +491,80 @@
                         <span class="hero-center-tagline">Made by founders, for founders</span>
                     </h1>
                     <p class="hero-center-lede">
-                        Quentl is straightforward financial software for small teams who want a clearer read on cash, burn, and revenue. It is a live model that tracks performance over time, surfaces what changed, and helps you stay financially on track — without living inside a spreadsheet.
+                        Live cash, burn, and revenue in one model — so you know where you stand without living in a spreadsheet.
                     </p>
-                    <div class="flex flex-wrap items-center justify-center gap-3 mt-8 md:mt-10">
-                        <a href="/onboarding.html?return=/app/" class="btn-accent text-sm md:text-base px-7 py-3 inline-flex items-center justify-center font-medium">Try Quentl free</a>
-                        <a href="/sign-in.html" class="btn-primary text-sm md:text-base px-6 py-3 inline-flex items-center justify-center font-medium">Sign in</a>
+                    <div class="hero-cta-row flex flex-wrap items-center justify-center gap-3 mt-8 md:mt-9">
+                        <a href="/onboarding.html?return=/app/" class="btn-accent text-sm md:text-base px-7 py-3 inline-flex items-center justify-center">Try Quentl free</a>
+                        <a href="/sign-in.html" class="btn-primary text-sm md:text-base px-6 py-3 inline-flex items-center justify-center">Sign in</a>
                     </div>
                 </div>
 
-                <div class="grid grid-cols-1 lg:grid-cols-12 gap-4 md:gap-5 lg:gap-6 items-stretch">
-                    <article class="hero-cf-card p-6 md:p-8 lg:col-span-8 min-w-0" aria-labelledby="hero-cf-heading">
-                        <div class="flex flex-wrap items-start justify-between gap-4">
-                            <div>
-                                <h2 id="hero-cf-heading" class="hero-cf-section-label mb-2">Cash balance</h2>
-                                <p class="hero-cf-metric-value">£498,350</p>
-                                <p class="hero-cf-metric-hint">Sample trajectory · operating account</p>
-                            </div>
-                            <span class="hero-cf-period shrink-0">Last 7 months</span>
+                <div class="hero-canvas" aria-labelledby="hero-cf-heading">
+                    <div class="hero-canvas__rail">
+                        <div>
+                            <h2 id="hero-cf-heading" class="hero-canvas__label">Cash balance</h2>
+                            <p class="hero-canvas__value">£498,350</p>
+                            <p class="hero-canvas__hint">Sample trajectory · operating account</p>
                         </div>
-                        <div class="hero-cf-svg-wrap">
-                            <svg class="hero-cf-svg" viewBox="0 0 440 168" preserveAspectRatio="xMidYMid meet" role="img" aria-labelledby="heroCfSvgTitle heroCfSvgDesc">
-                                <title id="heroCfSvgTitle">Illustrative cash balance trend</title>
-                                <desc id="heroCfSvgDesc">Line rises from roughly three hundred thousand pounds to just under five hundred thousand over seven months.</desc>
-                                <defs>
-                                    <linearGradient id="heroCfLineGrad" x1="52" y1="0" x2="400" y2="0" gradientUnits="userSpaceOnUse">
-                                        <stop offset="0%" stop-color="#c9a227"/>
-                                        <stop offset="45%" stop-color="#A14B14"/>
-                                        <stop offset="100%" stop-color="#2ECC71"/>
-                                    </linearGradient>
-                                    <linearGradient id="heroCfAreaGrad" x1="0" y1="0" x2="0" y2="1">
-                                        <stop offset="0%" stop-color="#A14B14" stop-opacity="0.22"/>
-                                        <stop offset="55%" stop-color="#c9a227" stop-opacity="0.08"/>
-                                        <stop offset="100%" stop-color="#A14B14" stop-opacity="0"/>
-                                    </linearGradient>
-                                </defs>
-                                <text x="4" y="40" fill="var(--chart-muted)" font-size="10" font-family="ui-monospace, monospace">500K</text>
-                                <text x="4" y="64" fill="var(--chart-muted)" font-size="10" font-family="ui-monospace, monospace">400K</text>
-                                <text x="4" y="88" fill="var(--chart-muted)" font-size="10" font-family="ui-monospace, monospace">350K</text>
-                                <text x="4" y="112" fill="var(--chart-muted)" font-size="10" font-family="ui-monospace, monospace">300K</text>
-                                <line x1="48" y1="36" x2="400" y2="36" stroke="var(--chart-grid)" stroke-width="1" opacity="0.65"/>
-                                <line x1="48" y1="60" x2="400" y2="60" stroke="var(--chart-grid)" stroke-width="1" opacity="0.65"/>
-                                <line x1="48" y1="84" x2="400" y2="84" stroke="var(--chart-grid)" stroke-width="1" opacity="0.65"/>
-                                <line x1="48" y1="108" x2="400" y2="108" stroke="var(--chart-grid)" stroke-width="1" opacity="0.65"/>
-                                <path d="M 52 102 C 92 98 108 94 136 88 C 168 81 188 76 216 70 C 248 63 268 58 296 54 C 328 49 352 46 376 44 C 388 43 394 42 400 41 L 400 124 L 52 124 Z" fill="url(#heroCfAreaGrad)"/>
-                                <path d="M 52 102 C 92 98 108 94 136 88 C 168 81 188 76 216 70 C 248 63 268 58 296 54 C 328 49 352 46 376 44 C 388 43 394 42 400 41" fill="none" stroke="url(#heroCfLineGrad)" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"/>
-                                <circle cx="52" cy="102" r="4" fill="#c9a227"/>
-                                <circle cx="136" cy="88" r="3.5" fill="#A14B14"/>
-                                <circle cx="216" cy="70" r="3.5" fill="#A14B14"/>
-                                <circle cx="296" cy="54" r="3.5" fill="#A14B14"/>
-                                <circle cx="376" cy="44" r="3.5" fill="#c9a227"/>
-                                <circle cx="400" cy="41" r="5" fill="#2ECC71"/>
-                                <g transform="translate(318, 10)">
-                                    <rect x="0" y="0" width="108" height="26" rx="13" fill="rgba(46, 204, 113, 0.14)" stroke="rgba(46, 204, 113, 0.35)" stroke-width="1"/>
-                                    <text x="54" y="17" text-anchor="middle" fill="var(--chart-text)" font-size="11" font-weight="600" font-family="ui-sans-serif, system-ui, sans-serif">£498K</text>
-                                </g>
-                                <text x="64" y="152" fill="var(--chart-muted)" font-size="10" font-family="ui-monospace, monospace" text-anchor="middle">May</text>
-                                <text x="120" y="152" fill="var(--chart-muted)" font-size="10" font-family="ui-monospace, monospace" text-anchor="middle">Jun</text>
-                                <text x="176" y="152" fill="var(--chart-muted)" font-size="10" font-family="ui-monospace, monospace" text-anchor="middle">Jul</text>
-                                <text x="232" y="152" fill="var(--chart-muted)" font-size="10" font-family="ui-monospace, monospace" text-anchor="middle">Aug</text>
-                                <text x="288" y="152" fill="var(--chart-muted)" font-size="10" font-family="ui-monospace, monospace" text-anchor="middle">Sep</text>
-                                <text x="344" y="152" fill="var(--chart-muted)" font-size="10" font-family="ui-monospace, monospace" text-anchor="middle">Oct</text>
-                                <text x="392" y="152" fill="var(--chart-text)" font-size="10" font-weight="600" font-family="ui-monospace, monospace" text-anchor="middle">Nov</text>
-                            </svg>
-                        </div>
-                    </article>
-
-                    <div class="lg:col-span-4 grid grid-cols-2 gap-3 md:gap-4 min-w-0" aria-label="Sample financial metrics">
-                        <div class="hero-kpi-tile">
+                        <p class="hero-canvas__period">Last 7 months</p>
+                    </div>
+                    <div class="hero-canvas__chart">
+                        <svg class="hero-cf-svg" viewBox="0 0 440 168" preserveAspectRatio="xMidYMid meet" role="img" aria-labelledby="heroCfSvgTitle heroCfSvgDesc">
+                            <title id="heroCfSvgTitle">Illustrative cash balance trend</title>
+                            <desc id="heroCfSvgDesc">Line rises from roughly three hundred thousand pounds to just under five hundred thousand over seven months.</desc>
+                            <defs>
+                                <linearGradient id="heroCfLineGrad" x1="52" y1="0" x2="400" y2="0" gradientUnits="userSpaceOnUse">
+                                    <stop offset="0%" stop-color="#c9a227"/>
+                                    <stop offset="45%" stop-color="#A14B14"/>
+                                    <stop offset="100%" stop-color="#2ECC71"/>
+                                </linearGradient>
+                                <linearGradient id="heroCfAreaGrad" x1="0" y1="0" x2="0" y2="1">
+                                    <stop offset="0%" stop-color="#A14B14" stop-opacity="0.2"/>
+                                    <stop offset="55%" stop-color="#c9a227" stop-opacity="0.06"/>
+                                    <stop offset="100%" stop-color="#A14B14" stop-opacity="0"/>
+                                </linearGradient>
+                            </defs>
+                            <text x="4" y="40" fill="var(--chart-muted)" font-size="10" font-family="ui-monospace, monospace">500K</text>
+                            <text x="4" y="64" fill="var(--chart-muted)" font-size="10" font-family="ui-monospace, monospace">400K</text>
+                            <text x="4" y="88" fill="var(--chart-muted)" font-size="10" font-family="ui-monospace, monospace">350K</text>
+                            <text x="4" y="112" fill="var(--chart-muted)" font-size="10" font-family="ui-monospace, monospace">300K</text>
+                            <line x1="48" y1="36" x2="400" y2="36" stroke="var(--chart-grid)" stroke-width="1" opacity="0.65"/>
+                            <line x1="48" y1="60" x2="400" y2="60" stroke="var(--chart-grid)" stroke-width="1" opacity="0.65"/>
+                            <line x1="48" y1="84" x2="400" y2="84" stroke="var(--chart-grid)" stroke-width="1" opacity="0.65"/>
+                            <line x1="48" y1="108" x2="400" y2="108" stroke="var(--chart-grid)" stroke-width="1" opacity="0.65"/>
+                            <path d="M 52 102 C 92 98 108 94 136 88 C 168 81 188 76 216 70 C 248 63 268 58 296 54 C 328 49 352 46 376 44 C 388 43 394 42 400 41 L 400 124 L 52 124 Z" fill="url(#heroCfAreaGrad)"/>
+                            <path class="hero-cf-line" d="M 52 102 C 92 98 108 94 136 88 C 168 81 188 76 216 70 C 248 63 268 58 296 54 C 328 49 352 46 376 44 C 388 43 394 42 400 41" fill="none" stroke="url(#heroCfLineGrad)" stroke-width="2.25" stroke-linecap="square" stroke-linejoin="miter"/>
+                            <rect x="396" y="37" width="8" height="8" fill="#2ECC71"/>
+                            <text x="400" y="28" text-anchor="middle" fill="var(--chart-text)" font-size="11" font-weight="600" font-family="ui-monospace, monospace">£498K</text>
+                            <text x="64" y="152" fill="var(--chart-muted)" font-size="10" font-family="ui-monospace, monospace" text-anchor="middle">May</text>
+                            <text x="120" y="152" fill="var(--chart-muted)" font-size="10" font-family="ui-monospace, monospace" text-anchor="middle">Jun</text>
+                            <text x="176" y="152" fill="var(--chart-muted)" font-size="10" font-family="ui-monospace, monospace" text-anchor="middle">Jul</text>
+                            <text x="232" y="152" fill="var(--chart-muted)" font-size="10" font-family="ui-monospace, monospace" text-anchor="middle">Aug</text>
+                            <text x="288" y="152" fill="var(--chart-muted)" font-size="10" font-family="ui-monospace, monospace" text-anchor="middle">Sep</text>
+                            <text x="344" y="152" fill="var(--chart-muted)" font-size="10" font-family="ui-monospace, monospace" text-anchor="middle">Oct</text>
+                            <text x="392" y="152" fill="var(--chart-text)" font-size="10" font-weight="600" font-family="ui-monospace, monospace" text-anchor="middle">Nov</text>
+                        </svg>
+                    </div>
+                    <div class="hero-kpi-strip" aria-label="Sample financial metrics">
+                        <div class="hero-kpi-cell">
                             <p class="hero-kpi-label">Runway</p>
                             <p class="hero-kpi-value text-[var(--runway-green)]">14 mo</p>
-                            <p class="hero-kpi-note"><span class="hero-kpi-dot hero-kpi-dot--green" aria-hidden="true"></span>Healthy buffer</p>
+                            <p class="hero-kpi-note">Healthy buffer</p>
                         </div>
-                        <div class="hero-kpi-tile">
+                        <div class="hero-kpi-cell">
                             <p class="hero-kpi-label">Net burn</p>
                             <p class="hero-kpi-value">£82K</p>
                             <p class="hero-kpi-note">Monthly operating</p>
                         </div>
-                        <div class="hero-kpi-tile">
+                        <div class="hero-kpi-cell">
                             <p class="hero-kpi-label">MRR</p>
                             <p class="hero-kpi-value">£142K</p>
                             <p class="hero-kpi-note">Recurring revenue</p>
                         </div>
-                        <div class="hero-kpi-tile">
+                        <div class="hero-kpi-cell">
                             <p class="hero-kpi-label">Net cashflow</p>
                             <p class="hero-kpi-value text-[var(--accent-orange)]">+£62K</p>
-                            <p class="hero-kpi-note"><span class="hero-kpi-dot" aria-hidden="true"></span>Last month · sample</p>
+                            <p class="hero-kpi-note">Last month · sample</p>
                         </div>
                     </div>
                 </div>
@@ -388,65 +572,66 @@
         </section>
 
         <div id="scroll-dark-zone">
-            <section id="charts" class="relative border-b border-[var(--border-subtle)] grid-bg">
+            <section id="charts" class="relative border-b border-[var(--border-subtle)]">
                 <div class="max-w-6xl mx-auto px-6 py-16 md:py-24">
-                    <div class="text-center max-w-2xl mx-auto mb-10 md:mb-14">
-                        <p class="text-xs font-semibold uppercase tracking-[0.22em] text-[var(--text-muted)]">Unit economics &amp; SaaS</p>
-                        <h2 class="mt-4 text-2xl sm:text-3xl font-semibold tracking-tight text-[var(--text-primary)] leading-snug">All the metrics you need, in one place.</h2>
-                        <p class="text-sm md:text-base text-[var(--text-muted)] mt-4 tracking-tight leading-relaxed">
-                            Quentl keeps your KPIs in sync with your forecast and monthly inputs — MRR through margin, CAC, NRR, churn, and payback update as the model moves, not when you remember to paste into a sheet.
-                        </p>
-                        <p class="text-sm md:text-base text-[var(--text-muted)] mt-3 tracking-tight leading-relaxed">
-                            Hook up accounting and commerce when you are ready; Quentl measures the lot automatically so you spend time on decisions, not reconciliation busywork.
+                    <div class="max-w-xl mb-10 md:mb-12">
+                        <p class="section-kicker">Unit economics &amp; SaaS</p>
+                        <h2 class="section-title">All the metrics you need, in one place.</h2>
+                        <p class="section-lede">
+                            KPIs stay wired to your forecast — MRR, margin, CAC, NRR, churn, and payback update as the model moves, not when you remember to paste into a sheet.
                         </p>
                     </div>
 
-                    <div class="surface-card p-6 md:p-8 border-t-2 border-t-[var(--accent-orange)]">
-                        <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4" aria-label="Sample unit economics and SaaS KPIs">
-                            <div class="surface-card p-4 border border-[var(--border-subtle)]">
-                                <p class="text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-widest mb-1">MRR</p>
-                                <p class="text-xl font-mono text-[var(--text-primary)]">£142,000</p>
-                                <p class="text-xs text-[var(--text-muted)] mt-2">Latest recurring revenue from your metrics row</p>
+                    <div class="metrics-board">
+                        <div class="metrics-board__head">
+                            <p class="metrics-board__head-title">Sample unit economics</p>
+                            <p class="text-xs text-[var(--text-muted)] font-mono tracking-tight">Live with your model</p>
+                        </div>
+                        <div class="metrics-grid" aria-label="Sample unit economics and SaaS KPIs">
+                            <div class="metric-cell">
+                                <p class="metric-cell__label">MRR</p>
+                                <p class="metric-cell__value">£142,000</p>
+                                <p class="metric-cell__note">Latest recurring revenue</p>
                             </div>
-                            <div class="surface-card p-4 border border-[var(--border-subtle)]">
-                                <p class="text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-widest mb-1">ARR</p>
-                                <p class="text-xl font-mono text-[var(--text-primary)]">£1,704,000</p>
-                                <p class="text-xs text-[var(--text-muted)] mt-2">MRR × 12</p>
+                            <div class="metric-cell">
+                                <p class="metric-cell__label">ARR</p>
+                                <p class="metric-cell__value">£1,704,000</p>
+                                <p class="metric-cell__note">MRR × 12</p>
                             </div>
-                            <div class="surface-card p-4 border border-[var(--border-subtle)]">
-                                <p class="text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-widest mb-1">NRR %</p>
-                                <p class="text-xl font-mono text-[var(--text-primary)]">118%</p>
-                                <p class="text-xs text-[var(--text-muted)] mt-2">Needs starting + expansion − churn − contraction MRR</p>
+                            <div class="metric-cell">
+                                <p class="metric-cell__label">NRR %</p>
+                                <p class="metric-cell__value">118%</p>
+                                <p class="metric-cell__note">Start + expansion − churn − contraction</p>
                             </div>
-                            <div class="surface-card p-4 border border-[var(--border-subtle)]">
-                                <p class="text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-widest mb-1">CAC (from inputs)</p>
-                                <p class="text-xl font-mono text-[var(--text-primary)]">£2,400</p>
-                                <p class="text-xs text-[var(--text-muted)] mt-2">S&amp;M spend / new customers</p>
+                            <div class="metric-cell">
+                                <p class="metric-cell__label">CAC</p>
+                                <p class="metric-cell__value">£2,400</p>
+                                <p class="metric-cell__note">S&amp;M spend / new customers</p>
                             </div>
-                            <div class="surface-card p-4 border border-[var(--border-subtle)]">
-                                <p class="text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-widest mb-1">CAC (stored)</p>
-                                <p class="text-xl font-mono text-[var(--text-primary)]">£2,100</p>
-                                <p class="text-xs text-[var(--text-muted)] mt-2">Raw field on monthly row</p>
+                            <div class="metric-cell">
+                                <p class="metric-cell__label">LTV:CAC</p>
+                                <p class="metric-cell__value">4.2×</p>
+                                <p class="metric-cell__note">Target &gt; 3×</p>
                             </div>
-                            <div class="surface-card p-4 border border-[var(--border-subtle)]">
-                                <p class="text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-widest mb-1">LTV:CAC</p>
-                                <p class="text-xl font-mono text-[var(--text-primary)]">4.2×</p>
-                                <p class="text-xs text-[var(--text-muted)] mt-2">Target &gt; 3×</p>
+                            <div class="metric-cell">
+                                <p class="metric-cell__label">CAC payback</p>
+                                <p class="metric-cell__value">11.2 mo</p>
+                                <p class="metric-cell__note">CAC / (MRR × gross margin %)</p>
                             </div>
-                            <div class="surface-card p-4 border border-[var(--border-subtle)]">
-                                <p class="text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-widest mb-1">CAC payback (mo)</p>
-                                <p class="text-xl font-mono text-[var(--text-primary)]">11.2</p>
-                                <p class="text-xs text-[var(--text-muted)] mt-2">CAC / (MRR × gross margin %)</p>
+                            <div class="metric-cell">
+                                <p class="metric-cell__label">Logo churn</p>
+                                <p class="metric-cell__value">2.1%</p>
+                                <p class="metric-cell__note">Customers lost / start</p>
                             </div>
-                            <div class="surface-card p-4 border border-[var(--border-subtle)]">
-                                <p class="text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-widest mb-1">Logo churn %</p>
-                                <p class="text-xl font-mono text-[var(--text-primary)]">2.1%</p>
-                                <p class="text-xs text-[var(--text-muted)] mt-2">Customers lost / start</p>
+                            <div class="metric-cell">
+                                <p class="metric-cell__label">Gross margin</p>
+                                <p class="metric-cell__value">68%</p>
+                                <p class="metric-cell__note">From forecast P&amp;L</p>
                             </div>
-                            <div class="surface-card p-4 border border-[var(--border-subtle)]">
-                                <p class="text-[10px] font-bold text-[var(--text-muted)] uppercase tracking-widest mb-1">Latest gross margin %</p>
-                                <p class="text-xl font-mono text-[var(--text-primary)]">68%</p>
-                                <p class="text-xs text-[var(--text-muted)] mt-2">From forecast P&amp;L</p>
+                            <div class="metric-cell">
+                                <p class="metric-cell__label">Stored CAC</p>
+                                <p class="metric-cell__value">£2,100</p>
+                                <p class="metric-cell__note">Raw field on monthly row</p>
                             </div>
                         </div>
                     </div>
@@ -454,43 +639,42 @@
             </section>
 
             <section id="integrations" class="border-b border-[var(--border-subtle)]">
-                <div class="max-w-6xl mx-auto px-6 py-16 md:py-22 text-center">
-                    <h2 class="text-xs font-semibold uppercase tracking-[0.22em] text-[var(--text-muted)]">Integrations</h2>
-                    <p class="text-sm text-[var(--text-muted)] mt-3 mb-10 md:mb-12 tracking-tight max-w-md mx-auto">Plug in the tools you already use — Quentl keeps the numbers honest.</p>
-                    <div class="flex flex-wrap justify-center items-center gap-6 md:gap-10">
-                        <div class="integration-logo-card" role="group" aria-label="Xero">
-                            <img src="assets/integrations/xero.svg" alt="" class="integration-logo-img" width="120" height="36" loading="lazy" decoding="async">
+                <div class="max-w-6xl mx-auto px-6 py-16 md:py-24 text-center">
+                    <p class="section-kicker">Integrations</p>
+                    <p class="section-lede mx-auto mt-4 mb-10">
+                        Plug in the tools you already use — Quentl keeps the numbers honest. Connect during onboarding or later in Settings.
+                    </p>
+                    <div class="integration-row" role="list" aria-label="Supported integrations">
+                        <div class="integration-item" role="listitem" aria-label="Xero">
+                            <img src="assets/integrations/xero.svg" alt="Xero" class="integration-logo-img" width="120" height="36" loading="lazy" decoding="async">
                         </div>
-                        <div class="integration-logo-card" role="group" aria-label="QuickBooks Online">
-                            <img src="assets/integrations/quickbooks.svg" alt="" class="integration-logo-img" width="140" height="36" loading="lazy" decoding="async">
+                        <div class="integration-item" role="listitem" aria-label="QuickBooks Online">
+                            <img src="assets/integrations/quickbooks.svg" alt="QuickBooks Online" class="integration-logo-img" width="140" height="36" loading="lazy" decoding="async">
                         </div>
-                        <div class="integration-logo-card" role="group" aria-label="Shopify">
-                            <img src="assets/integrations/shopify.svg" alt="" class="integration-logo-img" width="120" height="36" loading="lazy" decoding="async">
+                        <div class="integration-item" role="listitem" aria-label="Shopify">
+                            <img src="assets/integrations/shopify.svg" alt="Shopify" class="integration-logo-img" width="120" height="36" loading="lazy" decoding="async">
                         </div>
                     </div>
                 </div>
             </section>
 
             <section id="about-quentl" class="marketing-about-band border-b border-[var(--border-subtle)]">
-                <div class="max-w-6xl mx-auto px-6 py-20 md:py-24">
-                    <div class="max-w-2xl mx-auto text-center">
-                        <p class="text-xs font-semibold uppercase tracking-[0.22em] text-[var(--text-muted)]">Quentl</p>
-                        <h2 class="mt-3 text-xl md:text-2xl font-semibold tracking-tight text-[var(--text-primary)]">Built with founders in mind</h2>
-                        <p class="mt-5 text-sm md:text-base text-[var(--text-muted)] leading-relaxed tracking-tight">
-                            Quentl is your founder-grade cockpit for forecasts, runway, pipeline, and day-to-day ops — so you always know where you stand and what to do next.
+                <div class="max-w-6xl mx-auto px-6 py-20 md:py-24 relative">
+                    <div class="max-w-xl">
+                        <p class="section-kicker">About</p>
+                        <h2 class="section-title">Built with founders in mind</h2>
+                        <p class="section-lede">
+                            Quentl is a straightforward workspace for forecasts, runway, and day-to-day ops — so you always know where you stand.
                         </p>
-                        <p class="mt-4 text-sm md:text-base text-[var(--text-muted)] leading-relaxed tracking-tight">
-                            Quentl is a straightforward workspace for your numbers. When you want help, you reach a real person who knows your context — not a faceless help desk or an automated coach.
-                        </p>
-                        <p class="mt-4 text-sm md:text-base text-[var(--text-muted)] leading-relaxed tracking-tight">
-                            You stay in control of the model; we are here when you want a second pair of eyes.
+                        <p class="section-lede mt-4">
+                            When you want help, you reach a real person who knows your context — not a faceless help desk. You stay in control of the model; we are here when you want a second pair of eyes.
                         </p>
                     </div>
                 </div>
             </section>
 
-            <section class="max-w-6xl mx-auto px-6 py-20 md:py-28 text-center">
-                <a href="/onboarding.html?return=/app/" class="btn-accent text-base md:text-lg px-10 py-4 inline-flex items-center justify-center font-medium tracking-tight">
+            <section class="final-cta max-w-6xl mx-auto px-6 py-20 md:py-28 text-center">
+                <a href="/onboarding.html?return=/app/" class="btn-accent text-base md:text-lg px-10 py-4 inline-flex items-center justify-center tracking-tight">
                     Try Quentl free
                 </a>
                 <p class="mt-6 text-xs text-[var(--text-muted)] tracking-tight">
